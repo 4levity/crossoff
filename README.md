@@ -1,5 +1,7 @@
 # Crossoff LAN ticket scanning system #
 
+Author: C. Ivan Cooper ivan@4levity.net
+
 This project includes two parts:
 * Crossoff (Android barcode scanning app)
 * crossoff-server (Java 8 Ticket validation server)
