@@ -1,0 +1,29 @@
+Configuration:
+  status: warn
+
+  Appenders:
+    Console:
+      name: Console
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d [%-6p] %m (%c)%n"
+    File:
+      name: File
+      fileName: "log/crossoff.log"
+      PatternLayout:
+        Pattern: "%d [%-6p] %m (%c)%n"
+
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+      - ref: Console
+      - ref: File
+
+    Logger:
+    - name: org.hibernate
+      level: warn
+    - name: org.eclipse.jetty
+      level: warn
+    - name: com.mchange.v2
+      level: warn
