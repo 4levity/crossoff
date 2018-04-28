@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.junit.After;
 import org.junit.Before;
@@ -29,8 +28,6 @@ import static org.pricelessfestival.crossoff.server.GlobalObjectMapper.JACKSON;
 public class ApiTests {
 
     private static int HTTP_OK = 200;
-    private static int HTTP_NOT_FOUND = 404;
-    private static int HTTP_CONFLICT = 409;
     private static int HTTP_BAD_REQUEST = 400;
 
     private String rootUrl = "http://localhost:" + WebServer.PORT + "/";
@@ -63,8 +60,13 @@ public class ApiTests {
         addTickets("A","B","C");
 
         // scan two of them
-        assertEquals(HTTP_OK, scan("A").returnResponse().getStatusLine().getStatusCode());
-        assertEquals(HTTP_OK, scan("B").returnResponse().getStatusLine().getStatusCode());
+        ScanResult scanA = scan("A");
+        assertTrue(scanA.isAccepted());
+        assertNotNull(scanA.getTicket());
+        assertTrue(scanA.getMessage().toLowerCase().startsWith("valid"));
+        assertTrue(scanA.getTicket().getDescription().toLowerCase().startsWith("generic"));
+
+        assertTrue(scan("B").isAccepted());
 
         // now two of the tickets have been scanned
         Map<String, Ticket> tickets = getTickets();
@@ -79,8 +81,14 @@ public class ApiTests {
         addTickets("1","2");
 
         // valid and invalid
-        assertEquals(HTTP_OK, scan("1").returnResponse().getStatusLine().getStatusCode());
-        assertEquals(HTTP_NOT_FOUND, scan("3").returnResponse().getStatusLine().getStatusCode());
+        ScanResult scan1 = scan("1");
+        assertTrue(scan1.isAccepted());
+        assertNotNull(scan1.getTicket());
+        assertTrue(scan1.getMessage().toLowerCase().startsWith("valid"));
+        ScanResult scan2 = scan("3");
+        assertFalse(scan2.isAccepted());
+        assertNull(scan2.getTicket());
+        assertTrue(scan2.getMessage().toLowerCase().startsWith("invalid ticket"));
 
         // one ticket has been scanned
         Map<String, Ticket> tickets = getTickets();
@@ -94,8 +102,14 @@ public class ApiTests {
         addTickets("1","2");
 
         // duplicate scan
-        assertEquals(HTTP_OK, scan("1").returnResponse().getStatusLine().getStatusCode());
-        assertEquals(HTTP_CONFLICT, scan("1").returnResponse().getStatusLine().getStatusCode());
+        ScanResult scan1 = scan("1");
+        assertTrue(scan1.isAccepted());
+        assertNotNull(scan1.getTicket());
+        assertTrue(scan1.getMessage().toLowerCase().startsWith("valid"));
+        scan1 = scan("1");
+        assertFalse(scan1.isAccepted());
+        assertNotNull(scan1.getTicket());
+        assertTrue(scan1.getMessage().toLowerCase().startsWith("already scanned"));
 
         // one ticket has been scanned
         Map<String, Ticket> tickets = getTickets();
@@ -163,7 +177,7 @@ public class ApiTests {
                 .returnResponse().getStatusLine().getStatusCode();
     }
 
-    private Response scan(String code) throws IOException {
-        return Request.Post(rootUrl + "tickets/" + code).execute();
+    private ScanResult scan(String code) throws IOException {
+        return JACKSON.readValue(Request.Post(rootUrl + "tickets/" + code).execute().returnContent().asString(), ScanResult.class);
     }
 }

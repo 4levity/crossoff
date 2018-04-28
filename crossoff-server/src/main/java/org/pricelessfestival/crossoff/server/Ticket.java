@@ -1,6 +1,9 @@
 package org.pricelessfestival.crossoff.server;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import org.hibernate.annotations.NaturalId;
 
@@ -14,12 +17,14 @@ import java.time.Instant;
 @Table(name = "tickets")
 @NoArgsConstructor
 @ToString
-@JsonAutoDetect
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Ticket {
 
     @Id
     @GeneratedValue
     @Column(name = "id")
+    @JsonIgnore
     @Getter
     @Setter(AccessLevel.PRIVATE)
     private Long id;

@@ -1,5 +1,8 @@
 package org.pricelessfestival.crossoff.scanner;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Scanner {
 
     public static CharSequence scanTicket(String ticketCode) {
@@ -32,21 +35,58 @@ public class Scanner {
         });
         String result;
         if (commSuccess) {
-            switch (statusCode[0]) {
-                case 200: // accepted scan
-                    result = "Ticket Was Accepted!\n" + ticketCode;
-                    break;
-                case 409: // ticket already scanned
-                    result = "ERROR: Ticket was already scanned!\n" + ticketCode;
-                    break;
-                case 404: // unknown ticket
-                    result = "ERROR: Invalid ticket code (unknown ticket)\n" + ticketCode;
-                    break;
-                default:
-                    result = "Unexpected response from server: HTTP " + statusCode[0];
+            if (statusCode[0] == 200) {
+                result = parseScanResult(body[0]);
+            } else {
+                result = "ERROR: Unexpected response from server: HTTP " + statusCode[0];
             }
         } else {
-            result = "Communication with server failed. Check network and try again.";
+            result = "ERROR: Communication with server failed. Check network and try again.";
+        }
+        return result;
+    }
+
+    private static String parseScanResult(String body) {
+        String result;
+        JSONObject scanResult = null;
+        try {
+            scanResult = new JSONObject(body);
+        } catch (JSONException e) {
+            // handled below
+        }
+        if (scanResult != null) {
+            boolean accepted = false;
+            String message = null;
+            JSONObject ticket = null;
+            try {
+                accepted = scanResult.getBoolean("accepted");
+                message = scanResult.getString("message");
+                if (scanResult.has("ticket")) {
+                    ticket = scanResult.getJSONObject("ticket");
+                }
+            } catch (JSONException e) {
+                // handled below
+            }
+            if (message != null) {
+                if (accepted) {
+                    result = "Ticket Was Accepted!\n" + message;
+                    if (ticket != null) {
+                        try {
+                            result += "\n" + ticket.getString("description");
+                        } catch (JSONException e) {
+                            result += "\n(error retrieving ticket type info!)";
+                        }
+                    } else {
+                        result += "\n(didn't get ticket details from server!)";
+                    }
+                } else {
+                    result = "Uh oh! SCAN NOT ACCEPTED!\n" + message;
+                }
+            } else {
+                result = "ERROR: Incompatible server response!";
+            }
+        } else {
+            result = "ERROR: Failed to parse server response!";
         }
         return result;
     }

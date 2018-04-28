@@ -52,7 +52,6 @@ dependencies {
 
     compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: jerseyVersion
     compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet-core', version: jerseyVersion
-    //compile group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: jerseyVersion
     compile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: jerseyVersion
 
     testCompileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion

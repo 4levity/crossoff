@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -92,27 +91,29 @@ public class RootResource {
     @Path("tickets/{code}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Ticket scanTicket(@PathParam("code") String code) {
+    public ScanResult scanTicket(@PathParam("code") String code) {
         return Persistence.exec(session -> {
-            // HTTP 404 not found if code is not valid
+            ScanResult result;
+            // code is not valid
             Ticket ticket = session.bySimpleNaturalId(Ticket.class).load(code);
             if (ticket == null) {
                 log.warn("* UNKNOWN TICKET: {}", code);
-                throw new NotFoundException("unknown ticket");
-            }
-            // HTTP 409 conflict if ticket was already scanned
-            if (ticket.getScanned() != null) {
+                result = new ScanResult(false, "Invalid ticket code: " + code, null);
+            } else if (ticket.getScanned() != null) {
+                // ticket was already scanned
                 DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime( FormatStyle.LONG )
                                 .withLocale( Locale.US ).withZone( ZoneId.systemDefault() );
                 String scannedAt = formatter.format(ticket.getScanned());
                 log.warn("* DUPLICATE SCAN: {} (previously scanned at {})", ticket.getCode(), scannedAt);
-                throw new WebApplicationException("Ticket already scanned at " + scannedAt,Response.Status.CONFLICT);
+                result = new ScanResult(false, "Already scanned at " + scannedAt, ticket);
+            } else {
+                // successfully validated
+                ticket.setScanned(Instant.now());
+                session.saveOrUpdate(ticket);
+                log.info("* SCANNED VALID TICKET: {} {}", ticket.getCode(), ticket.getDescription());
+                result = new ScanResult(true, "Valid Ticket " + ticket.getCode(), ticket);
             }
-            // HTTP 200 successfully validated
-            ticket.setScanned(Instant.now());
-            session.saveOrUpdate(ticket);
-            log.info("* VALID TICKET: {} {}", ticket.getCode(), ticket.getDescription());
-            return ticket;
+            return result;
         });
     }
 }
