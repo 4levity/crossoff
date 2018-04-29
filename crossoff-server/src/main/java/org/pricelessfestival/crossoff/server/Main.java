@@ -8,6 +8,5 @@ public class Main {
     public static void main(String... args) throws Exception {
         Persistence.init("hibernate.cfg.xml");
         new WebServer().start();
-        Thread.currentThread().join(); // wait forever
     }
 }

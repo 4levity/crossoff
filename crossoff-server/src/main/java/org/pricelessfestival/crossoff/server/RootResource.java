@@ -94,9 +94,9 @@ public class RootResource {
     public ScanResult scanTicket(@PathParam("code") String code) {
         return Persistence.exec(session -> {
             ScanResult result;
-            // code is not valid
             Ticket ticket = session.bySimpleNaturalId(Ticket.class).load(code);
             if (ticket == null) {
+                // code is not found in database
                 log.warn("* UNKNOWN TICKET: {}", code);
                 result = new ScanResult(false, "Invalid ticket code: " + code, null);
             } else if (ticket.getScanned() != null) {

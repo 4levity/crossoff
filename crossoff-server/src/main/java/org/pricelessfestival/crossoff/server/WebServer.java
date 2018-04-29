@@ -30,12 +30,12 @@ class WebServer {
         server.setHandler(context);
 
         ServletHolder jerseyServlet = context.addServlet(ServletContainer.class, "/*");
-        String pkg = GlobalObjectMapper.class.getPackage().getName() + ",com.fasterxml.jackson.jaxrs.json";
-        jerseyServlet.setInitParameter("jersey.config.server.provider.packages", pkg);
         jerseyServlet.setInitOrder(0);
-
-        jerseyServlet.setInitParameter("jersey.config.server.provider.classnames",
-                RootResource.class.getCanonicalName());
+        // use Jackson's JAX-RS JSON support (instead of Jersey's), and our own provider to inject ObjectMapper
+        jerseyServlet.setInitParameter("jersey.config.server.provider.packages",
+                "com.fasterxml.jackson.jaxrs.json," + GlobalObjectMapper.class.getPackage().getName());
+        // register one resource class
+        jerseyServlet.setInitParameter("jersey.config.server.provider.classnames", RootResource.class.getCanonicalName());
 
         server.start();
         log.info("Ready to handle requests!");
