@@ -101,7 +101,7 @@ public class ApiTests {
         // create tickets
         addTickets("1","2");
 
-        // duplicate scan
+        // duplicate scan immediately after
         ScanResult scan1 = scan("1");
         assertTrue(scan1.isAccepted());
         assertNotNull(scan1.getTicket());
@@ -110,6 +110,18 @@ public class ApiTests {
         assertFalse(scan1.isAccepted());
         assertNotNull(scan1.getTicket());
         assertTrue(scan1.getMessage().toLowerCase().startsWith("already scanned"));
+        assertTrue(scan1.getMessage().toLowerCase().contains("0 seconds ago"));
+
+        // and again 1 second later
+        try {
+            Thread.sleep(999L);
+        } catch (InterruptedException e) {
+        }
+        scan1 = scan("1");
+        assertFalse(scan1.isAccepted());
+        assertNotNull(scan1.getTicket());
+        assertTrue(scan1.getMessage().toLowerCase().startsWith("already scanned"));
+        assertTrue(scan1.getMessage().toLowerCase().contains("1 second ago"));
 
         // one ticket has been scanned
         Map<String, Ticket> tickets = getTickets();
@@ -139,14 +151,19 @@ public class ApiTests {
     }
 
     @Test
-    public void testCreateFailsWIthNoEntity() throws IOException {
+    public void testCreateFailsWithNoEntity() throws IOException {
         int status = Request.Post(rootUrl + "tickets").execute().returnResponse().getStatusLine().getStatusCode();
         assertEquals(HTTP_BAD_REQUEST, status);
     }
 
     @Test
-    public void testCreateFailsWIthNoTickets() throws IOException {
+    public void testCreateFailsWithNoTickets() throws IOException {
         assertEquals(HTTP_BAD_REQUEST, addTickets());
+    }
+
+    @Test
+    public void testCreateFailsWithInvalidTicketCode() throws IOException {
+        assertEquals(HTTP_BAD_REQUEST, addTickets("TICKET1","","TICKET3"));
     }
 
     @Test

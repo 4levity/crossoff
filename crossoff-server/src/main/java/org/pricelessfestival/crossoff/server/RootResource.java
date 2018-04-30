@@ -7,12 +7,10 @@ import lombok.extern.log4j.Log4j2;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by ivan on 4/26/18.
@@ -102,11 +100,10 @@ public class RootResource {
                 result = new ScanResult(false, "Invalid ticket code: " + code, null);
             } else if (ticket.getScanned() != null) {
                 // ticket was already scanned
-                DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime( FormatStyle.LONG )
-                                .withLocale( Locale.US ).withZone( ZoneId.systemDefault() );
-                String scannedAt = formatter.format(ticket.getScanned());
-                log.warn("* DUPLICATE SCAN: {} (previously scanned at {})", ticket.getCode(), scannedAt);
-                result = new ScanResult(false, "Already scanned at " + scannedAt, ticket);
+                String scannedAt = TimeUtil.formatTimestamp(ticket.getScanned(), ZoneId.systemDefault());
+                String interval = TimeUtil.formatDuration(Duration.between(ticket.getScanned(), Instant.now()));
+                log.warn("* DUPLICATE SCAN: {} (scanned {} ago, {})", ticket.getCode(), interval, scannedAt);
+                result = new ScanResult(false, "Already scanned " + interval + " ago, " + scannedAt, ticket);
             } else {
                 // successfully validated
                 ticket.setScanned(Instant.now());
