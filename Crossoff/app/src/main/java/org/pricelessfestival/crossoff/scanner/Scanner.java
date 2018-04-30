@@ -5,6 +5,9 @@ import org.json.JSONObject;
 
 public class Scanner {
 
+    // if running as Android Virtual Device, 10.0.2.2 is the magic address of host system localhost
+    private static final String CROSSOFF_SERVER_HOST_ADDR = "10.0.2.2";
+
     public static CharSequence scanTicket(String ticketCode) {
         String result;
         if (!looksLikeTicketBarcode(ticketCode)) {
@@ -23,7 +26,7 @@ public class Scanner {
 
     private static String serverResult(String ticketCode) {
         HttpClient httpClient = new HttpClient();
-        String url = "http://10.0.2.2:8080/tickets/" + ticketCode;
+        String url = "http://" + CROSSOFF_SERVER_HOST_ADDR + ":8080/tickets/" + ticketCode;
         final int[] statusCode = new int[1];
         final String[] body = new String[1];
         boolean commSuccess = httpClient.post(url, "", new HttpClient.Handler() {

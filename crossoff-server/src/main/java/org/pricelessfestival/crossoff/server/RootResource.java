@@ -43,7 +43,8 @@ public class RootResource {
     public List<Ticket> getExampleTicketList() {
         return Lists.newArrayList(
                 new Ticket("VWKUMCJEUQ", "Test Event / Johnny Fakename"),
-                new Ticket("9780399563829", "Gödel, Escher, Bach")
+                new Ticket("9780465026562", "Gödel, Escher, Bach"),
+                new Ticket("9780399563829", "Soonish")
         );
     }
 

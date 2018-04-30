@@ -163,10 +163,24 @@ public class ApiTests {
         assertEquals(HTTP_BAD_REQUEST, addTickets("A1"));
     }
 
+    @Test
+    public void testValidExample() throws IOException {
+        Map<String, Ticket> exampleTickets = getTicketList("example");
+        String[] ticketCodes = new String[exampleTickets.size()];
+        assertEquals(HTTP_OK, addTickets(exampleTickets.keySet().toArray(ticketCodes)));
+        Map<String, Ticket> tickets = getTickets();
+        assertEquals(tickets.keySet(), exampleTickets.keySet());
+    }
+
     private Map<String, Ticket> getTickets() throws IOException {
-        String ticketList = Request.Get(rootUrl + "tickets").execute().returnContent().asString();
+        return getTicketList("");
+    }
+
+    private Map<String, Ticket> getTicketList(String listSpec) throws IOException {
+        String ticketList = Request.Get(rootUrl + "tickets/" + listSpec).execute().returnContent().asString();
         List<Ticket> tickets = JACKSON.readValue(ticketList, new TypeReference<List<Ticket>>() { } );
         return tickets.stream().collect(Collectors.toMap(Ticket::getCode, identity()));
+
     }
 
     private int addTickets(String... codes) throws IOException {
