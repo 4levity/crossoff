@@ -5,15 +5,12 @@ import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
@@ -25,34 +22,7 @@ import static org.pricelessfestival.crossoff.server.GlobalObjectMapper.JACKSON;
  */
 @SuppressWarnings("unchecked")
 @Log4j2
-public class ApiTests {
-
-    private static int HTTP_OK = 200;
-    private static int HTTP_BAD_REQUEST = 400;
-
-    private String rootUrl = "http://localhost:" + WebServer.PORT + "/";
-
-    @Rule
-    public TestName name = new TestName();
-
-    @Before
-    public void setup() {
-        log.info("***** STARTING TEST {} *****", name.getMethodName());
-        if (!Persistence.isReady()) {
-            Persistence.init("test.hibernate.cfg.xml");
-            try {
-                new WebServer().start();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    @After
-    public void tearDown() {
-        log.debug("DELETING all tickets after test");
-        Persistence.exec(session -> session.createQuery("delete from Ticket").executeUpdate());
-    }
+public class ApiTests extends CrossoffIntegrationTests {
 
     @Test
     public void testValidScans() throws IOException {
@@ -130,11 +100,6 @@ public class ApiTests {
     }
 
     @Test
-    public void testRoot() throws IOException {
-        assertEquals(HTTP_OK, Request.Get(rootUrl).execute().returnResponse().getStatusLine().getStatusCode());
-    }
-
-    @Test
     public void testCreateTicketCleanDatabase1() throws IOException {
         // verify no tickets to start
         assertEquals(0, getTickets().size());
@@ -152,7 +117,7 @@ public class ApiTests {
 
     @Test
     public void testCreateFailsWithNoEntity() throws IOException {
-        int status = Request.Post(rootUrl + "tickets").execute().returnResponse().getStatusLine().getStatusCode();
+        int status = Request.Post(rootUrl + "tickets/").execute().returnResponse().getStatusLine().getStatusCode();
         assertEquals(HTTP_BAD_REQUEST, status);
     }
 
@@ -182,29 +147,115 @@ public class ApiTests {
 
     @Test
     public void testValidExample() throws IOException {
-        Map<String, Ticket> exampleTickets = getTicketList("example");
+        Map<String, Ticket> exampleTickets = getTicketMap("example", null);
         String[] ticketCodes = new String[exampleTickets.size()];
         assertEquals(HTTP_OK, addTickets(exampleTickets.keySet().toArray(ticketCodes)));
         Map<String, Ticket> tickets = getTickets();
         assertEquals(tickets.keySet(), exampleTickets.keySet());
     }
 
-    private Map<String, Ticket> getTickets() throws IOException {
-        return getTicketList("");
+    @Test
+    public void testSortByCode() throws IOException {
+        Random random = new Random();
+        String[] codes = new String[1000];
+        for (int i = 0; i < 1000; i++) {
+            codes[i] = Long.toString(random.nextLong());
+        }
+        addTickets(codes);
+        List<Ticket> list = getTicketList(null, null);
+        ascendingCode(list, false); // unsorted will not be in order
+        list = getTicketList(null, "code");
+        ascendingCode(list, true); // sorted will be in order
     }
 
-    private Map<String, Ticket> getTicketList(String listSpec) throws IOException {
-        String ticketList = Request.Get(rootUrl + "tickets/" + listSpec).execute().returnContent().asString();
-        List<Ticket> tickets = JACKSON.readValue(ticketList, new TypeReference<List<Ticket>>() { } );
-        return tickets.stream().collect(Collectors.toMap(Ticket::getCode, identity()));
+    @Test
+    public void getTicketByCode() throws IOException {
+        addTickets("A1");
+        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertEquals("A1", ticket.getCode());
+    }
 
+    @Test
+    public void updateTicketDescription() throws IOException {
+        addTickets("A1");
+        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertTrue(ticket.getDescription().startsWith("GENERIC"));
+        Ticket updateTicket = new Ticket();
+        updateTicket.setDescription("new description");
+        assertEquals(200, Request.Put(rootUrl + "tickets/A1")
+                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .execute().returnResponse().getStatusLine().getStatusCode());
+        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertTrue(ticket.getDescription().startsWith("new descr"));
+    }
+
+    @Test
+    public void updateTicketDescriptionFailsWithNoEntity() throws IOException {
+        addTickets("A1");
+        assertEquals(400, Request.Put(rootUrl + "tickets/A1")
+                .execute().returnResponse().getStatusLine().getStatusCode());
+    }
+
+    @Test
+    public void testUnscan() throws IOException {
+        // create tickets and scan
+        addTickets("A","B");
+        scan("A");
+        scan("B");
+
+        // both of the tickets have been scanned
+        Map<String, Ticket> tickets = getTickets();
+        assertNotNull(tickets.get("A").getScanned());
+        assertNotNull(tickets.get("B").getScanned());
+
+        // un-scan ticket A
+        assertEquals(200, Request.Patch(rootUrl + "tickets/A").execute().returnResponse().getStatusLine().getStatusCode());
+
+        // now only one of the tickets has been scanned
+        tickets = getTickets();
+        assertNull(tickets.get("A").getScanned());
+        assertNotNull(tickets.get("B").getScanned());
+    }
+
+    private void ascendingCode(List<Ticket> tickets, boolean isAscending) {
+        boolean ascending = true;
+        String lastCode = "";
+        for (int i = 0; i < tickets.size(); i++) {
+            String thisCode = tickets.get(i).getCode();
+            if (thisCode.compareTo(lastCode) < 0) {
+                ascending = false;
+            }
+            lastCode = thisCode;
+        }
+        assertEquals(isAscending, ascending);
+    }
+
+    private Map<String, Ticket> getTickets() throws IOException {
+        return getTicketMap(null, null);
+    }
+
+    private Map<String, Ticket> getTicketMap(String listSpec, String orderBy) throws IOException {
+        List<Ticket> ticketList = getTicketList(listSpec, orderBy);
+        return ticketList.stream().collect(Collectors.toMap(Ticket::getCode, identity()));
+    }
+
+    private List<Ticket> getTicketList(String listSpec, String orderBy) throws IOException {
+        String url = rootUrl + "tickets/";
+        if (listSpec != null) {
+            url += listSpec;
+        }
+        if (orderBy != null) {
+            url += "?sort=" + orderBy;
+        }
+        String ticketList = Request.Get(url).execute().returnContent().asString();
+        return JACKSON.readValue(ticketList, new TypeReference<List<Ticket>>() { } );
     }
 
     private int addTickets(String... codes) throws IOException {
         List<Ticket> tickets = Lists.newArrayList(codes).stream()
                 .map(code -> new Ticket(code, "GENERIC TICKET " + code)).collect(Collectors.toList());
         String postTickets = JACKSON.writeValueAsString(tickets);
-        return Request.Post(rootUrl + "tickets").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
+        return Request.Post(rootUrl + "tickets/").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
                 .returnResponse().getStatusLine().getStatusCode();
     }
 

@@ -3,8 +3,11 @@ package org.pricelessfestival.crossoff.server;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
+import org.hibernate.Session;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.time.Duration;
@@ -17,37 +20,27 @@ import java.util.List;
  */
 @Log4j2
 @Path("/")
-public class RootResource {
+public class TicketsResource {
 
     @GET
-    public String getRoot() {
-        return this.getClass().getCanonicalName();
-    }
-
-    @GET
-    @Path("tickets")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Ticket> getAllTickets() {
+    public List<Ticket> getAllTickets(@QueryParam("sort") String orderBy) {
         return Persistence.exec(session -> {
-            CriteriaQuery<Ticket> ticketQuery = session.getCriteriaBuilder().createQuery(Ticket.class);
-            ticketQuery.from(Ticket.class);
+            CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            CriteriaQuery<Ticket> ticketQuery = criteriaBuilder.createQuery(Ticket.class);
+            Root<Ticket> root = ticketQuery.from(Ticket.class);
+            if (orderBy != null) {
+                try {
+                    ticketQuery.orderBy(criteriaBuilder.asc(root.get(orderBy)));
+                } catch (IllegalArgumentException e) {
+                    throw new BadRequestException("cannot order by unknown column: " + orderBy);
+                }
+            }
             return session.createQuery(ticketQuery).getResultList();
         });
     }
 
-    @GET
-    @Path("tickets/example")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Ticket> getExampleTicketList() {
-        return Lists.newArrayList(
-                new Ticket("VWKUMCJEUQ", "Test Event / Johnny Fakename"),
-                new Ticket("9780465026562", "Gödel, Escher, Bach"),
-                new Ticket("9780399563829", "Soonish")
-        );
-    }
-
     @POST
-    @Path("tickets")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<Ticket> createTickets(List<Ticket> tickets) {
@@ -58,8 +51,8 @@ public class RootResource {
             }
             tickets.forEach(ticket -> {
                 // ticket code is valid (nonempty)
-                if (Strings.isNullOrEmpty(ticket.getCode())) {
-                    log.warn("client tried to add ticket with invalid ticket code");
+                if (!Ticket.validTicketCode(ticket.getCode())) {
+                    log.warn("client tried to add ticket with invalid ticket code: " + ticket.getCode());
                     throw new BadRequestException("invalid ticket code");
                 }
                 // check for duplicates within submission
@@ -86,8 +79,59 @@ public class RootResource {
         });
     }
 
+    @GET
+    @Path("{code}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Ticket getTicketByCode(@PathParam("code") String code) {
+        return Persistence.exec(session -> ticket(session, code));
+    }
+
+    @PUT
+    @Path("{code}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Ticket updateTicket(@PathParam("code") String code, Ticket updateTicket) {
+        if (updateTicket == null) {
+            throw new BadRequestException("no body");
+        }
+        return Persistence.exec(session -> {
+            Ticket ticket = ticket(session, code);
+            if (!Strings.isNullOrEmpty(updateTicket.getDescription())) {
+                ticket.setDescription(updateTicket.getDescription());
+                log.info("* UPDATED TICKET DETAILS: {} {}", ticket.getCode(), ticket.getDescription());
+                session.saveOrUpdate(ticket);
+            }
+            return ticket;
+        });
+    }
+
+    @PATCH // does not require POST body/entity
+    @Path("{code}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Ticket unscanTicket(@PathParam("code") String code) {
+        return Persistence.exec(session -> {
+            Ticket ticket = ticket(session, code);
+            ticket.setScanned(null);
+            log.info("* UN-SCANNED TICKET: {} {}", ticket.getCode(), ticket.getDescription());
+            session.saveOrUpdate(ticket);
+            return ticket;
+        });
+    }
+
+    @GET
+    @Path("example")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Ticket> getExampleTicketList() {
+        return Lists.newArrayList(
+                new Ticket("VWKUMCJEUQ", "Test Event / Johnny Fakename"),
+                new Ticket("9780465026562", "Gödel, Escher, Bach"),
+                new Ticket("9780399563829", "Soonish")
+        );
+    }
+
     @POST // does not require POST body/entity
-    @Path("tickets/{code}")
+    @Path("{code}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public ScanResult scanTicket(@PathParam("code") String code) {
@@ -113,5 +157,13 @@ public class RootResource {
             }
             return result;
         });
+    }
+
+    private Ticket ticket(Session session, String code) {
+        Ticket ticket = session.bySimpleNaturalId(Ticket.class).load(code);
+        if (ticket == null) {
+            throw new NotFoundException();
+        }
+        return ticket;
     }
 }

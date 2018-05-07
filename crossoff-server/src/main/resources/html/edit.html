@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html><head><title>crossoff</title><script>
+    function ticketCode() {
+        if (window.location.search.startsWith("?code=")) {
+            return window.location.search.substr(6);
+        }
+        return "";
+    }
+    function loadTicket() {
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                showTicket(JSON.parse(this.responseText));
+            }
+        }
+        request.open("GET","/tickets/" + ticketCode(),true);
+        request.send(null);
+    }
+    function modifyTicket(verb, option, body)
+    {
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText);
+                if (response.code) {
+                    showTicket(response);
+                } else {
+                    if (response.message && response.ticket) {
+                        alert("Scanned " + response.ticket.description + " / " + response.message);
+                    }
+                    loadTicket();
+                }
+            }
+        };
+        var url = "/tickets/" + ticketCode();
+        if (option) {
+            url += "?" + option;
+        }
+        request.open(verb,url,true);
+        request.setRequestHeader("Content-Type", "application/json");
+        request.send(body);
+    }
+    function scan() {
+        if (confirm("Are you sure you want to MARK THIS TICKET SCANNED?")) {
+            modifyTicket("POST", "manual=true", null);
+        }
+    }
+    function unscan() {
+        if (confirm("Are you sure you want to UN-SCAN THIS TICKET?")) {
+            modifyTicket("PATCH", null, null);
+        }
+    }
+    function save() {
+        if (confirm("Are you sure you want to UPDATE DETAILS OF THIS TICKET?")) {
+            modifyTicket("PUT", null, JSON.stringify({description:document.getElementById("description").value}));
+        } else {
+            loadTicket();
+        }
+    }
+    function showTicket(ticket) {
+        var scanned;
+        if (ticket.scanned) {
+            // convert UTC seconds.milliseconds timestamp into browser-local time string
+            scanned = new Date(1000 * ticket.scanned).toLocaleString()
+                    + " <button type=button onclick=unscan()>Remove Scan</button>";
+        } else {
+            scanned = "never <button type=button onclick=scan()>Scan Now</button>";
+        }
+        document.getElementById("code").innerHTML = ticket.code;
+        document.getElementById("description").value = ticket.description;
+        document.getElementById("scanned").innerHTML = scanned;
+    }
+</script></head>
+<body onload=loadTicket()>
+<h3><a href="/">Crossoff</a> - Edit Ticket</h3>
+<table>
+    <tr><td>Code:</td><td><div id=code></div></td></tr>
+    <tr><td>Description:</td><td><input type=textbox size=70 id=description></td></tr>
+    <tr><td><button type=button onclick=save()>Save Changes</button></td></tr>
+    <tr><td>Scanned:</td><td><div id=scanned></div></td></tr>
+</table>
+</ul>
+</body></html>

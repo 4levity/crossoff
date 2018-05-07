@@ -8,6 +8,7 @@ import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.regex.Pattern;
 
 /**
  * Created by ivan on 4/26/18.
@@ -38,6 +39,7 @@ public class Ticket {
     @Getter
     @Setter
     private String description;
+    public static String _description = "description";
 
     @Column(name = "scanned")
     @Getter
@@ -47,5 +49,11 @@ public class Ticket {
     public Ticket(String code, String description) {
         this.code = code;
         this.description = description;
+    }
+
+    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-]+$");
+
+    public static boolean validTicketCode(String code) {
+        return code != null && VALID_TICKET_CODE.matcher(code).matches();
     }
 }

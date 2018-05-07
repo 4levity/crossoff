@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><title>crossoff</title><script>
+    function loadBy(orderBy) {
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                showTickets(JSON.parse(this.responseText));
+            }
+        }
+        request.open("GET","/tickets/?sort=" + orderBy,true);
+        request.send(null);
+    }
+    function showTickets(tickets) {
+        var ticketList = "<table border=1><thead style='background: lightgray'><tr>"
+                + "<td onclick=loadBy('code')>Code</td>"
+                + "<td onclick=loadBy('description')>Description</td>"
+                + "<td onclick=loadBy('scanned')>Scanned</td>"
+                + "</tr></thead><tbody>";
+        var row;
+        var scanned = 0;
+        for (row = 0; row < tickets.length; row++) {
+            var ticket = tickets[row];
+            var scanText;
+            var crossoffStyle;
+            if (ticket.scanned) {
+                // convert UTC seconds.milliseconds timestamp into browser-local time string
+                scanText = new Date(1000 * ticket.scanned).toLocaleString();
+                scanned++;
+                crossoffStyle=" style='text-decoration: line-through'";
+            } else {
+                scanText = "never";
+                crossoffStyle="";
+            }
+            ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>" +
+                    "<td" + crossoffStyle + ">" + ticket.code + "</td>" +
+                    "<td>" + ticket.description +  "</td>" +
+                    "<td>" + scanText + "</td>"
+                    + "</tr>";
+        }
+        ticketList += "</tbody></table>";
+        document.getElementById("summary").innerHTML = "Scanned " + scanned + " of " + tickets.length + " tickets";
+        document.getElementById("tickets").innerHTML = ticketList;
+    }
+</script></head>
+<body onload=loadBy("description")>
+<h3><a href="/">Crossoff</a> - Tickets</h3>
+<div id=summary></div>
+<div id=tickets></div>
+<a href=admin.html>[admin]</a>
+</body></html>

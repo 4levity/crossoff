@@ -11,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by ivan on 4/30/18.
  */
-public class TimeUtilTests {
+public class TimeUtilTests extends CrossoffTests {
 
     @Test
     public void testFormatTimestamp() {
