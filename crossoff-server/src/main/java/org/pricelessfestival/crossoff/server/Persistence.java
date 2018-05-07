@@ -1,6 +1,7 @@
 package org.pricelessfestival.crossoff.server;
 
 import lombok.extern.log4j.Log4j2;
+import org.h2.tools.Server;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -8,6 +9,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
+import java.sql.SQLException;
 import java.util.function.Function;
 
 /**
@@ -22,10 +24,18 @@ public class Persistence {
         return sessionFactory != null;
     }
 
-    public static void init(String hibernateConfigFile) {
+    public static void init(String hibernateConfigFile, boolean startH2WebServer) {
         StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure(hibernateConfigFile).build();
         sessionFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
-        log.info("Persistence ready");
+        log.info("Persistence ready, JDBC URL = {}", getJdbcUrl());
+        if (startH2WebServer) {
+            try {
+                Server.createWebServer().start();
+                log.info("H2 database web interface at http://localhost:8082/ (local access only)");
+            } catch (SQLException e) {
+                log.warn("failed to start H2 embedded webserver at http://localhost:8082/", e);
+            }
+        }
     }
 
     public static <T> T exec(Function<Session, T> operation) {
@@ -56,5 +66,13 @@ public class Persistence {
         } finally {
             session.close();
         }
+    }
+
+    private static String getJdbcUrl() {
+        return exec(session -> {
+            String[] url = new String[1];
+            session.doWork(connection -> url[0] = connection.getMetaData().getURL());
+            return url[0];
+        });
     }
 }

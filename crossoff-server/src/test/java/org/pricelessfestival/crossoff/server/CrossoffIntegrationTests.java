@@ -12,14 +12,14 @@ public class CrossoffIntegrationTests extends CrossoffTests {
 
     static int HTTP_OK = 200;
     static int HTTP_BAD_REQUEST = 400;
-    String rootUrl = "http://localhost:" + WebServer.PORT + "/";
+    String rootUrl = "http://localhost:" + CrossoffWebServer.PORT + "/";
 
     @Before
     public void setupDatabase() {
         if (!Persistence.isReady()) {
-            Persistence.init("test.hibernate.cfg.xml");
+            Persistence.init("test.hibernate.cfg.xml", true);
             try {
-                new WebServer().start();
+                new CrossoffWebServer().start();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -31,5 +31,4 @@ public class CrossoffIntegrationTests extends CrossoffTests {
         log.debug("DELETING all tickets after test");
         Persistence.exec(session -> session.createQuery("delete from Ticket").executeUpdate());
     }
-
 }

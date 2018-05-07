@@ -190,6 +190,20 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
+    public void updateTicketholder() throws IOException {
+        addTickets("A1");
+        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertTrue(ticket.getTicketholder().startsWith("Ticket"));
+        Ticket updateTicket = new Ticket();
+        updateTicket.setTicketholder("Alice Cooper");
+        assertEquals(200, Request.Put(rootUrl + "tickets/A1")
+                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .execute().returnResponse().getStatusLine().getStatusCode());
+        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertTrue(ticket.getTicketholder().startsWith("Alice"));
+    }
+
+    @Test
     public void updateTicketDescriptionFailsWithNoEntity() throws IOException {
         addTickets("A1");
         assertEquals(400, Request.Put(rootUrl + "tickets/A1")
@@ -253,7 +267,7 @@ public class ApiTests extends CrossoffIntegrationTests {
 
     private int addTickets(String... codes) throws IOException {
         List<Ticket> tickets = Lists.newArrayList(codes).stream()
-                .map(code -> new Ticket(code, "GENERIC TICKET " + code)).collect(Collectors.toList());
+                .map(code -> new Ticket(code, "GENERIC TICKET " + code, "Ticket Holder")).collect(Collectors.toList());
         String postTickets = JACKSON.writeValueAsString(tickets);
         return Request.Post(rootUrl + "tickets/").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
                 .returnResponse().getStatusLine().getStatusCode();

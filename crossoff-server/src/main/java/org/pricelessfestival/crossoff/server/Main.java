@@ -6,7 +6,7 @@ package org.pricelessfestival.crossoff.server;
 public class Main {
 
     public static void main(String... args) throws Exception {
-        Persistence.init("hibernate.cfg.xml");
-        new WebServer().start();
+        Persistence.init("hibernate.cfg.xml", true);
+        new CrossoffWebServer().start();
     }
 }

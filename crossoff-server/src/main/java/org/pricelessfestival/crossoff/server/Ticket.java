@@ -39,19 +39,25 @@ public class Ticket {
     @Getter
     @Setter
     private String description;
-    public static String _description = "description";
+
+    @Column(name = "ticketholder")
+    @Getter
+    @Setter
+    private String ticketholder; // name of the ticketholder if known
 
     @Column(name = "scanned")
     @Getter
     @Setter
     private Instant scanned; // when ticket was scanned, or null if never scanned
 
-    public Ticket(String code, String description) {
+    public Ticket(String code, String description, String ticketholder) {
         this.code = code;
         this.description = description;
+        this.ticketholder = ticketholder;
     }
 
-    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-]+$");
+    // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
+    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
 
     public static boolean validTicketCode(String code) {
         return code != null && VALID_TICKET_CODE.matcher(code).matches();

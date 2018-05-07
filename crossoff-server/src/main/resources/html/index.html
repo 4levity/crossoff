@@ -6,35 +6,36 @@
             if (this.readyState == 4 && this.status == 200) {
                 showTickets(JSON.parse(this.responseText));
             }
-        }
+        };
         request.open("GET","/tickets/?sort=" + orderBy,true);
         request.send(null);
     }
     function showTickets(tickets) {
-        var ticketList = "<table border=1><thead style='background: lightgray'><tr>"
+        var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
                 + "<td onclick=loadBy('code')>Code</td>"
                 + "<td onclick=loadBy('description')>Description</td>"
                 + "<td onclick=loadBy('scanned')>Scanned</td>"
                 + "</tr></thead><tbody>";
         var row;
         var scanned = 0;
+        var tdStyle = 'border-bottom:1px solid black';
         for (row = 0; row < tickets.length; row++) {
             var ticket = tickets[row];
             var scanText;
-            var crossoffStyle;
+            var tdCodeStyle;
             if (ticket.scanned) {
                 // convert UTC seconds.milliseconds timestamp into browser-local time string
                 scanText = new Date(1000 * ticket.scanned).toLocaleString();
                 scanned++;
-                crossoffStyle=" style='text-decoration: line-through'";
+                tdCodeStyle = tdStyle + ";text-decoration:line-through";
             } else {
                 scanText = "never";
-                crossoffStyle="";
+                tdCodeStyle = tdStyle;
             }
             ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>" +
-                    "<td" + crossoffStyle + ">" + ticket.code + "</td>" +
-                    "<td>" + ticket.description +  "</td>" +
-                    "<td>" + scanText + "</td>"
+                    "<td style='" + tdCodeStyle + "'>" + ticket.code + "</td>" +
+                    "<td style='" + tdStyle + "'>" + ticket.description +  "</td>" +
+                    "<td style='" + tdStyle + "'>" + scanText + "</td>"
                     + "</tr>";
         }
         ticketList += "</tbody></table>";

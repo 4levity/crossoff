@@ -21,14 +21,14 @@ import java.util.EnumSet;
  * Created by ivan on 4/26/18.
  */
 @Log4j2
-class WebServer {
+class CrossoffWebServer {
 
     public static int PORT = 8080;
     private Server server = null;
 
     void start() throws Exception {
         // static html
-        URI resourceUri = WebServer.class.getClassLoader().getResource("html/").toURI();
+        URI resourceUri = CrossoffWebServer.class.getClassLoader().getResource("html/").toURI();
         ServletContextHandler htmlHandler = new ServletContextHandler();
         htmlHandler.setBaseResource(Resource.newResource(resourceUri));
         ServletHolder htmlHolder = new ServletHolder("default", DefaultServlet.class);
@@ -36,7 +36,7 @@ class WebServer {
 
         // Jersey integration
         ServletContextHandler servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        servletHandler.addFilter(WebServer.LogFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        servletHandler.addFilter(CrossoffWebServer.LogFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         ServletHolder jerseyServlet = servletHandler.addServlet(ServletContainer.class, "/*");
         jerseyServlet.setInitOrder(0);
         // use Jackson's JAX-RS JSON support (instead of Jersey's own), and our own provider to inject ObjectMapper
@@ -52,7 +52,7 @@ class WebServer {
         server = new Server(PORT);
         server.setHandler(handlers);
         server.start();
-        log.info("Ready to handle requests!");
+        log.info("Crossoff server UI and API online at http://localhost:{}/ + listening on all interfaces", PORT);
     }
 
     public static class LogFilter implements Filter {

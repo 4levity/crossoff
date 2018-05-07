@@ -71,7 +71,7 @@ public class TicketsResource {
             });
             // save tickets
             tickets.forEach(ticket -> {
-                Ticket newTicket = new Ticket(ticket.getCode(), ticket.getDescription());
+                Ticket newTicket = new Ticket(ticket.getCode(), ticket.getDescription(), ticket.getTicketholder());
                 session.saveOrUpdate(newTicket);
             });
             log.info("ADDED {} tickets", tickets.size());
@@ -96,9 +96,17 @@ public class TicketsResource {
         }
         return Persistence.exec(session -> {
             Ticket ticket = ticket(session, code);
-            if (!Strings.isNullOrEmpty(updateTicket.getDescription())) {
+            boolean modified = false;
+            if (!Strings.isNullOrEmpty(updateTicket.getDescription())) { // update description?
                 ticket.setDescription(updateTicket.getDescription());
-                log.info("* UPDATED TICKET DETAILS: {} {}", ticket.getCode(), ticket.getDescription());
+                modified = true;
+            }
+            if (!Strings.isNullOrEmpty(updateTicket.getTicketholder())) { // update ticketholder name?
+                ticket.setTicketholder(updateTicket.getTicketholder());
+                modified = true;
+            }
+            if (modified) {
+                log.info("* UPDATED TICKET DETAILS: {} {} / {}", ticket.getCode(), ticket.getTicketholder(), ticket.getDescription());
                 session.saveOrUpdate(ticket);
             }
             return ticket;
@@ -124,9 +132,9 @@ public class TicketsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Ticket> getExampleTicketList() {
         return Lists.newArrayList(
-                new Ticket("VWKUMCJEUQ", "Test Event / Johnny Fakename"),
-                new Ticket("9780465026562", "Gödel, Escher, Bach"),
-                new Ticket("9780399563829", "Soonish")
+                new Ticket("VWKUMCJEUQ", "Test Event", "Johnny Fakename"),
+                new Ticket("9780465026562", "ISBN Gödel, Escher, Bach", null),
+                new Ticket("9780399563829", "ISBN Soonish", null)
         );
     }
 
