@@ -44,6 +44,7 @@ dependencies {
 
     compile group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
     compile group: 'org.hibernate', name: 'hibernate-c3p0', version: hibernateVersion
+    compile group: 'org.hibernate', name: 'hibernate-envers', version: hibernateVersion
     compile group: 'com.h2database', name: 'h2', version: '1.4.197'
 
     compile group: 'org.eclipse.jetty', name: 'jetty-server', version: jettyVersion

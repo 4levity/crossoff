@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.*;
 import java.time.Instant;
@@ -14,6 +15,7 @@ import java.util.regex.Pattern;
  * Created by ivan on 4/26/18.
  */
 @Entity
+@Audited
 @Table(name = "tickets")
 @NoArgsConstructor
 @ToString
@@ -72,11 +74,14 @@ public class Ticket {
     }
 
     public enum TicketType {
-        UNSPECIFIED,
-        WILL_CALL,
-        PRINT_AT_HOME,
-        WALK_UP_SALE,
-        MOBILE,
-        PHYSICAL_MAILED
+        // CAUTION: By default, Hibernate serializes enums by integer value.
+        // Therefore, if you remove items or change the order of items below, compatibility will be broken with existing databases.
+        // Adding new types at the end is OK and will not break compatibility.
+        UNSPECIFIED,    //0
+        WILL_CALL,      //1
+        PRINT_AT_HOME,  //2
+        WALK_UP_SALE,   //3
+        MOBILE,         //4
+        PHYSICAL_MAILED //5
     }
 }

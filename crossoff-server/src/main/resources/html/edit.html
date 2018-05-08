@@ -34,7 +34,7 @@
                     loadTicket();
                 }
             } else if (this.readyState == 4 && this.status == 204) { // HTTP 204 no-content is seen in response to DELETE
-                window.location.href = 'index.html';
+                window.location.href = "/";
             }
         };
         var url = "/tickets/" + ticketCode();

@@ -145,7 +145,7 @@
             request.onreadystatechange = function () {
                 if (this.readyState == 4 && this.status == 200) {
                     alert("Tickets were successfully imported.");
-                    window.location.href = "index.html";
+                    window.location.href = "/";
                 } else if(this.readyState == 4) {
                     document.getElementById("tickets").innerHTML = "An error occurred while trying to import tickets.<br>"
                             + this.responseText; // show server error message
