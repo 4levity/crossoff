@@ -12,8 +12,9 @@
     }
     function showTickets(tickets) {
         var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
-                + "<td onclick=loadBy('code')>Code</td>"
-                + "<td onclick=loadBy('description')>Description</td>"
+                + "<td onclick=loadBy('code')>Code&nbsp;</td>"
+                + "<td onclick=loadBy('ticketholder')>Ticketholder&nbsp;</td>"
+                + "<td onclick=loadBy('description')>Description&nbsp;</td>"
                 + "<td onclick=loadBy('scanned')>Scanned</td>"
                 + "</tr></thead><tbody>";
         var row;
@@ -33,8 +34,9 @@
                 tdCodeStyle = tdStyle;
             }
             ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>" +
-                    "<td style='" + tdCodeStyle + "'>" + ticket.code + "</td>" +
-                    "<td style='" + tdStyle + "'>" + ticket.description +  "</td>" +
+                    "<td style='" + tdCodeStyle + "'>" + ticket.code + "&nbsp;</td>" +
+                    "<td style='" + tdCodeStyle + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>" +
+                    "<td style='" + tdStyle + "'>" + ticket.description +  "&nbsp;</td>" +
                     "<td style='" + tdStyle + "'>" + scanText + "</td>"
                     + "</tr>";
         }

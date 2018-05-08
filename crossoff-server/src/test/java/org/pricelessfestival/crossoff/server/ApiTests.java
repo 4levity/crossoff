@@ -163,6 +163,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         }
         addTickets(codes);
         List<Ticket> list = getTicketList(null, null);
+        assertEquals(1000, list.size());
         ascendingCode(list, false); // unsorted will not be in order
         list = getTicketList(null, "code");
         ascendingCode(list, true); // sorted will be in order

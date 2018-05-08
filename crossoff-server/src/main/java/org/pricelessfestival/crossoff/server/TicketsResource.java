@@ -97,12 +97,18 @@ public class TicketsResource {
         return Persistence.exec(session -> {
             Ticket ticket = ticket(session, code);
             boolean modified = false;
-            if (!Strings.isNullOrEmpty(updateTicket.getDescription())) { // update description?
-                ticket.setDescription(updateTicket.getDescription());
+            if (!Strings.isNullOrEmpty(updateTicket.getDescription())
+                    && !updateTicket.getDescription().equals(ticket.getDescription())) {
+                ticket.setDescription(updateTicket.getDescription()); // update description
                 modified = true;
             }
-            if (!Strings.isNullOrEmpty(updateTicket.getTicketholder())) { // update ticketholder name?
-                ticket.setTicketholder(updateTicket.getTicketholder());
+            if (updateTicket.getTicketholder() != null && updateTicket.getTicketholder().isEmpty()
+                    && ticket.getTicketholder() != null) {
+                ticket.setTicketholder(null); // empty string = unset (set to null)
+                modified = true;
+            } else if (updateTicket.getTicketholder() != null
+                    && (ticket.getTicketholder() == null || !updateTicket.getTicketholder().equals(ticket.getTicketholder()))) {
+                ticket.setTicketholder(updateTicket.getTicketholder()); // set or change ticketholder name
                 modified = true;
             }
             if (modified) {
