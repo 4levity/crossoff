@@ -25,7 +25,7 @@ import static org.pricelessfestival.crossoff.server.GlobalObjectMapper.JACKSON;
 public class ApiTests extends CrossoffIntegrationTests {
 
     @Test
-    public void testValidScans() throws IOException {
+    public void validScans() throws IOException {
         // create tickets
         addTickets("A","B","C");
 
@@ -46,7 +46,7 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
-    public void testScanUnknownTicket() throws IOException {
+    public void scanUnknownTicket() throws IOException {
         // create tickets
         addTickets("1","2");
 
@@ -67,7 +67,7 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
-    public void testScanTwice() throws IOException {
+    public void scanTwice() throws IOException {
         // create tickets
         addTickets("1","2");
 
@@ -100,7 +100,7 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
-    public void testCreateTicketCleanDatabase1() throws IOException {
+    public void createTicketCleanDatabase1() throws IOException {
         // verify no tickets to start
         assertEquals(0, getTickets().size());
         // create ticket
@@ -110,34 +110,34 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
-    public void testCreateTicketCleanDatabase2() throws IOException {
+    public void createTicketCleanDatabase2() throws IOException {
         // if database is not cleaned between tests, either this test or testCreateTicketCleanDatabase1 will fail
-        testCreateTicketCleanDatabase1();
+        createTicketCleanDatabase1();
     }
 
     @Test
-    public void testCreateFailsWithNoEntity() throws IOException {
+    public void createFailsWithNoEntity() throws IOException {
         int status = Request.Post(rootUrl + "tickets/").execute().returnResponse().getStatusLine().getStatusCode();
         assertEquals(HTTP_BAD_REQUEST, status);
     }
 
     @Test
-    public void testCreateFailsWithNoTickets() throws IOException {
+    public void createFailsWithNoTickets() throws IOException {
         assertEquals(HTTP_BAD_REQUEST, addTickets());
     }
 
     @Test
-    public void testCreateFailsWithInvalidTicketCode() throws IOException {
+    public void createFailsWithInvalidTicketCode() throws IOException {
         assertEquals(HTTP_BAD_REQUEST, addTickets("TICKET1","","TICKET3"));
     }
 
     @Test
-    public void testCreateFailsWIthDuplicateTicketInSubmission() throws IOException {
+    public void createFailsWIthDuplicateTicketInSubmission() throws IOException {
         assertEquals(HTTP_BAD_REQUEST, addTickets("A1","B1","A1","C1"));
     }
 
     @Test
-    public void testCreateFailsWIthDuplicateTicketInDatabase() throws IOException {
+    public void createFailsWIthDuplicateTicketInDatabase() throws IOException {
         // create some valid tickets
         assertEquals(HTTP_OK, addTickets("A1","B1","C1"));
 
@@ -146,7 +146,7 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
-    public void testValidExample() throws IOException {
+    public void validExample() throws IOException {
         Map<String, Ticket> exampleTickets = getTicketMap("example", null);
         String[] ticketCodes = new String[exampleTickets.size()];
         assertEquals(HTTP_OK, addTickets(exampleTickets.keySet().toArray(ticketCodes)));
@@ -155,7 +155,7 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
-    public void testSortByCode() throws IOException {
+    public void sortByCode() throws IOException {
         Random random = new Random();
         String[] codes = new String[1000];
         for (int i = 0; i < 1000; i++) {
@@ -183,7 +183,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertTrue(ticket.getDescription().startsWith("GENERIC"));
         Ticket updateTicket = new Ticket();
         updateTicket.setDescription("new description");
-        assertEquals(200, Request.Put(rootUrl + "tickets/A1")
+        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A1")
                 .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
                 .execute().returnResponse().getStatusLine().getStatusCode());
         ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
@@ -197,7 +197,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertTrue(ticket.getTicketholder().startsWith("Ticket"));
         Ticket updateTicket = new Ticket();
         updateTicket.setTicketholder("Alice Cooper");
-        assertEquals(200, Request.Put(rootUrl + "tickets/A1")
+        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A1")
                 .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
                 .execute().returnResponse().getStatusLine().getStatusCode());
         ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
@@ -205,14 +205,43 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
+    public void updateTicketType() throws IOException {
+        addTickets("A1");
+        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertTrue(ticket.getTicketType().equals(Ticket.TicketType.UNSPECIFIED));
+        Ticket updateTicket = new Ticket();
+        updateTicket.setTicketType(Ticket.TicketType.PRINT_AT_HOME);
+        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A1")
+                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .execute().returnResponse().getStatusLine().getStatusCode());
+        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertTrue(ticket.getTicketType().equals(Ticket.TicketType.PRINT_AT_HOME));
+    }
+
+    @Test
     public void updateTicketDescriptionFailsWithNoEntity() throws IOException {
         addTickets("A1");
-        assertEquals(400, Request.Put(rootUrl + "tickets/A1")
+        assertEquals(HTTP_BAD_REQUEST, Request.Put(rootUrl + "tickets/A1")
                 .execute().returnResponse().getStatusLine().getStatusCode());
     }
 
     @Test
-    public void testUnscan() throws IOException {
+    public void deleteTicket() throws IOException {
+        addTickets("A","B");
+        scan("A");
+        // cannot delete already-scanned A
+        assertEquals(HTTP_BAD_REQUEST,
+                Request.Delete(rootUrl + "tickets/A").execute().returnResponse().getStatusLine().getStatusCode());
+        // successfully delete not-yet-scanned B
+        assertEquals(HTTP_NO_CONTENT,
+                Request.Delete(rootUrl + "tickets/B").execute().returnResponse().getStatusLine().getStatusCode());
+        Map<String, Ticket> tickets = getTickets();
+        assertEquals(1, tickets.size());
+        assertNotNull(tickets.get("A"));
+    }
+
+    @Test
+    public void unscan() throws IOException {
         // create tickets and scan
         addTickets("A","B");
         scan("A");
@@ -224,7 +253,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertNotNull(tickets.get("B").getScanned());
 
         // un-scan ticket A
-        assertEquals(200, Request.Patch(rootUrl + "tickets/A").execute().returnResponse().getStatusLine().getStatusCode());
+        assertEquals(HTTP_OK, Request.Patch(rootUrl + "tickets/A").execute().returnResponse().getStatusLine().getStatusCode());
 
         // now only one of the tickets has been scanned
         tickets = getTickets();
@@ -268,7 +297,8 @@ public class ApiTests extends CrossoffIntegrationTests {
 
     private int addTickets(String... codes) throws IOException {
         List<Ticket> tickets = Lists.newArrayList(codes).stream()
-                .map(code -> new Ticket(code, "GENERIC TICKET " + code, "Ticket Holder")).collect(Collectors.toList());
+                .map(code -> new Ticket(code, "GENERIC TICKET " + code, "Ticket Holder", Ticket.TicketType.UNSPECIFIED))
+                .collect(Collectors.toList());
         String postTickets = JACKSON.writeValueAsString(tickets);
         return Request.Post(rootUrl + "tickets/").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
                 .returnResponse().getStatusLine().getStatusCode();

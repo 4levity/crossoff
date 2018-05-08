@@ -5,8 +5,10 @@ package org.pricelessfestival.crossoff.server;
  */
 public class Main {
 
+    private static final int WEBSERVER_PORT = 8080;
+
     public static void main(String... args) throws Exception {
         Persistence.init("hibernate.cfg.xml", true);
-        new CrossoffWebServer().start();
+        new CrossoffWebServer(WEBSERVER_PORT).start();
     }
 }

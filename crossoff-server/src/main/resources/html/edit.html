@@ -7,17 +7,20 @@
         return "";
     }
     function loadTicket() {
+        noTicket();
         var request = new XMLHttpRequest();
         request.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
                 showTicket(JSON.parse(this.responseText));
             }
-        }
+        };
         request.open("GET","/tickets/" + ticketCode(),true);
         request.send(null);
     }
     function modifyTicket(verb, option, body)
     {
+        noTicket();
+        document.getElementById("scanresult").innerHTML = '';
         var request = new XMLHttpRequest();
         request.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
@@ -26,10 +29,12 @@
                     showTicket(response);
                 } else {
                     if (response.message && response.ticket) {
-                        alert("Scanned " + response.ticket.code + " / " + response.message);
+                        document.getElementById("scanresult").innerHTML = "Scanned " + response.ticket.code + " / " + response.message;
                     }
                     loadTicket();
                 }
+            } else if (this.readyState == 4 && this.status == 204) { // HTTP 204 no-content is seen in response to DELETE
+                window.location.href = 'index.html';
             }
         };
         var url = "/tickets/" + ticketCode();
@@ -37,7 +42,9 @@
             url += "?" + option;
         }
         request.open(verb,url,true);
-        request.setRequestHeader("Content-Type", "application/json");
+        if (body) {
+            request.setRequestHeader("Content-Type", "application/json");
+        }
         request.send(body);
     }
     function scan() {
@@ -50,11 +57,18 @@
             modifyTicket("PATCH", null, null);
         }
     }
+    function deleteTicket() {
+        if (confirm("Are you sure you want to DELETE THIS TICKET?")) {
+            modifyTicket("DELETE", null, null);
+        }
+    }
     function save() {
         if (confirm("Are you sure you want to UPDATE DETAILS OF THIS TICKET?")) {
             var ticket = {
                 description: document.getElementById("description").value,
-                ticketholder: document.getElementById("ticketholder").value };
+                ticketholder: document.getElementById("ticketholder").value,
+                ticketType: document.getElementById("tickettype").value
+            };
             modifyTicket("PUT", null, JSON.stringify(ticket));
         } else {
             loadTicket();
@@ -62,27 +76,57 @@
     }
     function showTicket(ticket) {
         var scanned;
+        var deleteDisabled;
         if (ticket.scanned) {
             // convert UTC seconds.milliseconds timestamp into browser-local time string
             scanned = new Date(1000 * ticket.scanned).toLocaleString()
                     + " <button type=button onclick=unscan()>Remove Scan</button>";
+            deleteDisabled = true;
         } else {
             scanned = "never <button type=button onclick=scan()>Scan Now</button>";
+            deleteDisabled = false;
         }
         document.getElementById("code").innerHTML = ticket.code;
         document.getElementById("ticketholder").value = ticket.ticketholder || '';
+        selectTicketType(ticket.ticketType);
         document.getElementById("description").value = ticket.description;
         document.getElementById("scanned").innerHTML = scanned;
+        document.getElementById("deletebutton").disabled = deleteDisabled;
+    }
+    function noTicket() {
+        document.getElementById("code").innerHTML = "loading...";
+        document.getElementById("ticketholder").value = '';
+        selectTicketType("UNSPECIFIED");
+        document.getElementById("description").value = '';
+        document.getElementById("scanned").innerHTML = '';
+        document.getElementById("deletebutton").disabled = true;
+    }
+    function selectTicketType(ticketType) {
+        var select = document.getElementById("tickettype");
+        for (var ix = 0; ix < select.options.length; ix++) {
+            if (select.options[ix].text === ticketType) {
+                select.selectedIndex = ix;
+            }
+        }
     }
 </script></head>
 <body onload=loadTicket()>
 <h3><a href="/">Crossoff</a> - Edit Ticket</h3>
 <table>
-    <tr><td>Code:</td><td><div id=code></div></td></tr>
-    <tr><td>Ticketholder:</td><td><input type=textbox size=40 id=ticketholder></td></tr>
-    <tr><td>Description:</td><td><input type=textbox size=70 id=description></td></tr>
-    <tr><td><button type=button onclick=save()>Save Changes</button></td></tr>
-    <tr><td>Scanned:</td><td><div id=scanned></div></td></tr>
+    <tr><td>Code:</td><td style='font-family:monospace'><output id=code></output></td></tr>
+    <tr><td>Ticketholder:</td><td><input type=textbox size=40 id=ticketholder /></td></tr>
+    <tr><td>Ticket Type:</td><td><select id=tickettype>
+        <option>UNSPECIFIED</option>
+        <option>WILL_CALL</option>
+        <option>PRINT_AT_HOME</option>
+        <option>WALK_UP_SALE</option>
+        <option>MOBILE</option>
+        <option>PHYSICAL_MAILED</option>
+    </select></td></tr>
+    <tr><td>Description:</td><td><input type=textbox size=70 id=description /></td></tr>
+    <tr><td><button type=button onclick=save()>Save Changes</button><br/></td></tr>
+    <tr><td>Scanned:</td><td><output id=scanned></output><div style='font-weight:bold' id=scanresult></div></td></tr>
+    <tr><td><button type=button id=deletebutton onclick=deleteTicket()>DELETE this ticket</button></td></tr>
 </table>
 </ul>
 </body></html>

@@ -14,6 +14,7 @@
         var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
                 + "<td onclick=loadBy('code')>Code&nbsp;</td>"
                 + "<td onclick=loadBy('ticketholder')>Ticketholder&nbsp;</td>"
+                + "<td onclick=loadBy('ticketType')>Ticketholder&nbsp;</td>"
                 + "<td onclick=loadBy('description')>Description&nbsp;</td>"
                 + "<td onclick=loadBy('scanned')>Scanned</td>"
                 + "</tr></thead><tbody>";
@@ -34,8 +35,9 @@
                 tdCodeStyle = tdStyle;
             }
             ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>" +
-                    "<td style='" + tdCodeStyle + "'>" + ticket.code + "&nbsp;</td>" +
+                    "<td style='font-family:monospace;" + tdCodeStyle + "'>" + ticket.code + "&nbsp;</td>" +
                     "<td style='" + tdCodeStyle + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>" +
+                    "<td style='" + tdCodeStyle + "'>" + (ticket.ticketType || 'UNSPECIFIED')  + "&nbsp;</td>" +
                     "<td style='" + tdStyle + "'>" + ticket.description +  "&nbsp;</td>" +
                     "<td style='" + tdStyle + "'>" + scanText + "</td>"
                     + "</tr>";
@@ -49,5 +51,5 @@
 <h3><a href="/">Crossoff</a> - Tickets</h3>
 <div id=summary></div>
 <div id=tickets></div>
-<a href=admin.html>[admin]</a>
+<br/><a href=admin.html>[ go to admin / import page ]</a>
 </body></html>

@@ -23,10 +23,15 @@ import java.util.EnumSet;
 @Log4j2
 class CrossoffWebServer {
 
-    public static int PORT = 8080;
-    private Server server = null;
+    private int port;
+    private Server server;
 
-    void start() throws Exception {
+    public CrossoffWebServer(int port) {
+        this.port = port;
+        this.server = null;
+    }
+
+    CrossoffWebServer start() throws Exception {
         // static html
         URI resourceUri = CrossoffWebServer.class.getClassLoader().getResource("html/").toURI();
         ServletContextHandler htmlHandler = new ServletContextHandler();
@@ -49,10 +54,11 @@ class CrossoffWebServer {
         // start server
         HandlerList handlers = new HandlerList();
         handlers.setHandlers(new Handler[] { servletHandler, htmlHandler });
-        server = new Server(PORT);
+        server = new Server(port);
         server.setHandler(handlers);
         server.start();
-        log.info("Crossoff server UI and API online at http://localhost:{}/ + listening on all interfaces", PORT);
+        log.info("Crossoff server UI and API online at http://localhost:{}/ + listening on all interfaces", port);
+        return this;
     }
 
     public static class LogFilter implements Filter {

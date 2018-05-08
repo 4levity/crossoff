@@ -1,6 +1,169 @@
 <!DOCTYPE html>
-<html><head><title>crossoff</title></head>
+<html><head><title>crossoff</title><script>
+    var tickets;
+    var ticketDescriptions;
+    var selectedTickets;
+    function parseBptList(list) {
+        var ticketTypes = {'Will Call Tickets': 'WILL_CALL',
+            'Print-at-Home Tickets': 'PRINT_AT_HOME',
+            'Walk-Up Sale Tickets': 'WALK_UP_SALE',
+            'Mobile Tickets': 'MOBILE',
+            'Physical Tickets': 'PHYSICAL_MAILED',
+            'Donations': 'UNSPECIFIED' };
+        var lines = list.split('\n');
+        var ticketType = undefined;
+        var validHeader = false;
+        var firstLine = true;
+        console.log("trying to parse BPT tickets file, lines = " + lines.length);
+        for (var ix = 0; ix < lines.length; ix++) {
+            var line = lines[ix];
+            var cols = line.split('\t');
+            if (firstLine) {
+                if (!(cols.length == 1 && cols[0] === 'Ticket Holders')) {
+                    console.log("ERROR: first line of file = " + cols[0]);
+                    alert("This doesn't look like a BPT Complete List download file, should start with first line \"Ticket Holders\"");
+                    return [];
+                }
+                firstLine = false;
+            } else if (cols.length == 1 && cols[0].length > 0) {
+                var newTicketType = ticketTypes[cols[0]];
+                if (newTicketType) {
+                    ticketType = newTicketType;
+                    validHeader = false;
+                    console.log("selected ticket type: " + newTicketType);
+                } else {
+                    ticketType = undefined;
+                    validHeader = false;
+                }
+            } else if (cols.length >= 24) {
+                if (ticketType && !validHeader) {
+                    if (!(cols[0] === 'Ticket ID'
+                            && cols[4] === 'Attendee L Name'
+                            && cols[5] === 'Attendee F Name'
+                            && cols[6] === 'Company/Org'
+                            && cols[18] === 'Barcode'
+                            && cols[21] === 'Admission Level')) {
+                        ticketType = undefined;
+                        console.log("WARNING: expected a valid header row");
+                    } else {
+                        validHeader = true;
+                    }
+                } else if (ticketType && validHeader && parseInt(cols[0]).toString() === cols[0] && cols[23] === 'N/A') {
+                    // looks like a not yet admitted ticket
+                    var ticketDescription = cols[21];
+                    tickets.push({code: cols[18],
+                        description: ticketDescription,
+                        ticketType: ticketType,
+                        ticketholder: cols[5] + ' ' + cols[4] });
+                    if (ticketDescriptions.indexOf(ticketDescription) < 0) {
+                        ticketDescriptions.push(ticketDescription);
+                    }
+                    console.log("added ticket " + cols[18]);
+                } else {
+                    ticketType = undefined;
+                    validHeader = false;
+                    console.log("WARNING: expected valid ticket line - ", cols);
+                }
+            } else {
+                ticketType = undefined;
+                validHeader = false;
+            }
+        }
+    }
+    function fileSelected(event) {
+        document.getElementById("fileselectbutton").disabled = true;
+        var selection = event.target;
+        var reader = new FileReader();
+        reader.onload = function() {
+            var text = reader.result;
+            tickets = [];
+            ticketDescriptions = [];
+            document.getElementById('ticketSelector').innerHTML = '';
+            document.getElementById('tickets').innerHTML = '';
+            parseBptList(text);
+            if (ticketDescriptions.length > 0 && tickets.length > 0) {
+                document.getElementById('summary').innerHTML = "Loaded " + tickets.length + " tickets.";
+                showPreview();
+            } else {
+                document.getElementById('summary').innerHTML = "Did not load any tickets. Is file valid?";
+            }
+        };
+        reader.readAsText(selection.files[0]);
+    }
+    function showPreview() {
+        var selectorHtml = "Select which ticket descriptions to import, then scroll to bottom of page:<br/>";
+        for (var ix = 0; ix < ticketDescriptions.length; ix++) {
+            selectorHtml += "<div></div><input type=checkbox id=desc" + ix + " onclick='showSelectedTickets()' checked/>" +
+                    "<label for=desc" + ix + ">" + ticketDescriptions[ix] + "</label></div>";
+        }
+        document.getElementById("ticketSelector").innerHTML = selectorHtml;
+        showSelectedTickets();
+    }
+    function selectTickets() {
+        var selectedDescriptions = [];
+        for (var ix = 0; ix < ticketDescriptions.length; ix++) {
+            if (document.getElementById("desc" + ix).checked) {
+                selectedDescriptions.push(ticketDescriptions[ix]);
+            }
+        }
+        selectedTickets = [];
+        for (var row = 0; row < tickets.length; row++) {
+            var ticket = tickets[row];
+            if (selectedDescriptions.indexOf(ticket.description) > -1) {
+                selectedTickets.push(ticket);
+            }
+        }
+    }
+    function showSelectedTickets() {
+        selectTickets();
+        var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
+                + "<td>Barcode&nbsp;</td>"
+                + "<td>Ticket Type&nbsp;</td>"
+                + "<td>Ticketholder&nbsp;</td>"
+                + "<td>Description&nbsp;</td>"
+                + "</tr></thead><tbody>";
+        for (var row = 0; row < selectedTickets.length; row++) {
+            var ticket = selectedTickets[row];
+            ticketList += "<tr>"
+                    + "<td style='font-family:monospace;border-bottom:1px solid black'>" + ticket.code + "&nbsp;</td>"
+                    + "<td style='border-bottom:1px solid black'>" + ticket.ticketType + "&nbsp;</td>"
+                    + "<td style='border-bottom:1px solid black'>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
+                    + "<td style='border-bottom:1px solid black'>" + ticket.description +  "&nbsp;</td>"
+                    + "</tr>";
+        }
+        ticketList += "</tbody></table>";
+        if (selectedTickets.length > 0) {
+            ticketList += "<button type=button id=import onclick=importSelected()>IMPORT THESE TICKETS NOW</button>";
+        } else {
+            ticketList += "[no tickets to import]";
+        }
+        document.getElementById("tickets").innerHTML = ticketList;
+    }
+    function importSelected() {
+        if (confirm("Are you sure you want to import " + selectedTickets.length + " tickets?")) {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    alert("Tickets were successfully imported.");
+                    window.location.href = "index.html";
+                } else if(this.readyState == 4) {
+                    document.getElementById("tickets").innerHTML = "An error occurred while trying to import tickets.<br>"
+                            + this.responseText; // show server error message
+                }
+            };
+            request.open("POST","/tickets/", true);
+            request.setRequestHeader("Content-Type", "application/json");
+            request.send(JSON.stringify(selectedTickets));
+        }
+    }
+</script></head>
 <body>
 <h3><a href="/">Crossoff</a> - Admin</h3>
-[not implemented yet]
+<div style='border: 1px solid black'>
+    BPT Ticket Loader: Download "Complete List" downloadreport.xls from BPT, and
+    <input id=fileselectbutton type=file onchange='fileSelected(event)'/>
+    <div id=summary>(summary will appear here)</div>
+    <div id=ticketSelector></div>
+    <div id=tickets></div>
+</div>
 </body></html>

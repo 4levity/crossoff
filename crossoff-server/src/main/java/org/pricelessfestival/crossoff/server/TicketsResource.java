@@ -10,6 +10,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -55,6 +56,11 @@ public class TicketsResource {
                     log.warn("client tried to add ticket with invalid ticket code: " + ticket.getCode());
                     throw new BadRequestException("invalid ticket code");
                 }
+                // ticket type is valid
+                if (ticket.getTicketType() == null) {
+                    log.warn("client tried to add ticket without specifying ticket type");
+                    throw new BadRequestException("must specify ticketType value");
+                }
                 // check for duplicates within submission
                 tickets.forEach(ticketMatch -> {
                     if (ticketMatch != ticket && ticketMatch.getCode().equals(ticket.getCode())) {
@@ -71,7 +77,11 @@ public class TicketsResource {
             });
             // save tickets
             tickets.forEach(ticket -> {
-                Ticket newTicket = new Ticket(ticket.getCode(), ticket.getDescription(), ticket.getTicketholder());
+                Ticket newTicket = new Ticket(
+                        ticket.getCode(),
+                        ticket.getDescription(),
+                        ticket.getTicketholder(),
+                        ticket.getTicketType());
                 session.saveOrUpdate(newTicket);
             });
             log.info("ADDED {} tickets", tickets.size());
@@ -86,6 +96,19 @@ public class TicketsResource {
         return Persistence.exec(session -> ticket(session, code));
     }
 
+    @DELETE
+    @Path("{code}")
+    public Response deleteTicketByCode(@PathParam("code") String code) {
+        return Persistence.exec(session -> {
+            Ticket ticket = ticket(session, code);
+            if (ticket.getScanned() != null) {
+                throw new BadRequestException("cannot delete a ticket that has a scan timestamp");
+            }
+            session.delete(ticket);
+            return Response.noContent().build();
+        });
+    }
+
     @PUT
     @Path("{code}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -97,11 +120,13 @@ public class TicketsResource {
         return Persistence.exec(session -> {
             Ticket ticket = ticket(session, code);
             boolean modified = false;
+            // update description
             if (!Strings.isNullOrEmpty(updateTicket.getDescription())
                     && !updateTicket.getDescription().equals(ticket.getDescription())) {
                 ticket.setDescription(updateTicket.getDescription()); // update description
                 modified = true;
             }
+            // update or unset ticketholder
             if (updateTicket.getTicketholder() != null && updateTicket.getTicketholder().isEmpty()
                     && ticket.getTicketholder() != null) {
                 ticket.setTicketholder(null); // empty string = unset (set to null)
@@ -111,6 +136,13 @@ public class TicketsResource {
                 ticket.setTicketholder(updateTicket.getTicketholder()); // set or change ticketholder name
                 modified = true;
             }
+            // change ticket type
+            if (updateTicket.getTicketType() != null
+                    && (ticket.getTicketType() == null || !updateTicket.getTicketType().equals(ticket.getTicketType()))) {
+                ticket.setTicketType(updateTicket.getTicketType());
+                modified = true;
+            }
+            // save changes
             if (modified) {
                 log.info("* UPDATED TICKET DETAILS: {} {} / {}", ticket.getCode(), ticket.getTicketholder(), ticket.getDescription());
                 session.saveOrUpdate(ticket);
@@ -138,9 +170,9 @@ public class TicketsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Ticket> getExampleTicketList() {
         return Lists.newArrayList(
-                new Ticket("VWKUMCJEUQ", "Test Event", "Johnny Fakename"),
-                new Ticket("9780465026562", "ISBN Gödel, Escher, Bach", null),
-                new Ticket("9780399563829", "ISBN Soonish", null)
+                new Ticket("VWKUMCJEUQ", "Test Event", "Johnny Fakename", Ticket.TicketType.PHYSICAL_MAILED),
+                new Ticket("9780465026562", "ISBN Gödel, Escher, Bach", null, Ticket.TicketType.UNSPECIFIED),
+                new Ticket("9780399563829", "ISBN Soonish", null, Ticket.TicketType.PRINT_AT_HOME)
         );
     }
 

@@ -45,15 +45,23 @@ public class Ticket {
     @Setter
     private String ticketholder; // name of the ticketholder if known
 
+    @Column(name = "tickettype")
+    public TicketType getTicketType() {
+        return this.ticketType == null ? TicketType.UNSPECIFIED : this.ticketType;
+    }
+    @Setter
+    private TicketType ticketType; // physical, print at home, mobile, etc
+
     @Column(name = "scanned")
     @Getter
     @Setter
     private Instant scanned; // when ticket was scanned, or null if never scanned
 
-    public Ticket(String code, String description, String ticketholder) {
+    public Ticket(String code, String description, String ticketholder ,TicketType ticketType) {
         this.code = code;
         this.description = description;
         this.ticketholder = ticketholder;
+        this.ticketType = ticketType;
     }
 
     // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
@@ -61,5 +69,14 @@ public class Ticket {
 
     public static boolean validTicketCode(String code) {
         return code != null && VALID_TICKET_CODE.matcher(code).matches();
+    }
+
+    public enum TicketType {
+        UNSPECIFIED,
+        WILL_CALL,
+        PRINT_AT_HOME,
+        WALK_UP_SALE,
+        MOBILE,
+        PHYSICAL_MAILED
     }
 }
