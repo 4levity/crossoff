@@ -31,7 +31,7 @@ class CrossoffWebServer {
         this.server = null;
     }
 
-    CrossoffWebServer start() throws Exception {
+    public CrossoffWebServer start() throws Exception {
         // static html
         URI resourceUri = CrossoffWebServer.class.getClassLoader().getResource("html/").toURI();
         ServletContextHandler htmlHandler = new ServletContextHandler();
