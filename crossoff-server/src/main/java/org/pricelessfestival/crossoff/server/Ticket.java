@@ -40,17 +40,15 @@ public class Ticket {
     @Column(name = "description", nullable = false)
     @Getter
     @Setter
-    private String description;
+    private String description; // description of the ticket i.e. "general admission pass"
 
     @Column(name = "ticketholder")
     @Getter
     @Setter
-    private String ticketholder; // name of the ticketholder if known
+    private String ticketholder; // name of the ticketholder, or null if not known
 
-    @Column(name = "tickettype")
-    public TicketType getTicketType() {
-        return this.ticketType == null ? TicketType.UNSPECIFIED : this.ticketType;
-    }
+    @Column(name = "tickettype", nullable = false)
+    @Getter
     @Setter
     private TicketType ticketType; // physical, print at home, mobile, etc
 
