@@ -10,7 +10,7 @@ import javax.ws.rs.core.Response;
  * Created by ivan on 5/6/18.
  */
 @Log4j2
-public class CrossoffIntegrationTests extends CrossoffTests {
+public abstract class CrossoffIntegrationTests extends CrossoffTests {
 
     static int HTTP_OK = Response.Status.OK.getStatusCode();
     static int HTTP_NO_CONTENT = Response.Status.NO_CONTENT.getStatusCode();
