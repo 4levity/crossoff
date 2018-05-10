@@ -28,6 +28,9 @@
             if (ticket.scanned) {
                 // convert UTC seconds.milliseconds timestamp into browser-local time string
                 scanText = new Date(1000 * ticket.scanned).toLocaleString();
+                if (ticket.manualScan) {
+                    scanText += " (m)";
+                }
                 scanned++;
                 tdCodeStyle = tdStyle + ";text-decoration:line-through";
             } else {

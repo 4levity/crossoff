@@ -36,12 +36,15 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertTrue(scanA.getMessage().toLowerCase().startsWith("valid"));
         assertTrue(scanA.getTicket().getDescription().toLowerCase().startsWith("generic"));
 
-        assertTrue(scan("B").isAccepted());
+        // manual scan
+        assertTrue(scan("B", true).isAccepted());
 
         // now two of the tickets have been scanned
         Map<String, Ticket> tickets = getTickets();
         assertNotNull(tickets.get("A").getScanned());
+        assertNull(tickets.get("A").getManualScan()); // null if regular scan
         assertNotNull(tickets.get("B").getScanned());
+        assertTrue(tickets.get("B").getManualScan()); // true if manual scan
         assertNull(tickets.get("C").getScanned());
     }
 
@@ -304,7 +307,11 @@ public class ApiTests extends CrossoffIntegrationTests {
                 .returnResponse().getStatusLine().getStatusCode();
     }
 
+    private ScanResult scan(String code, boolean manualScan) throws IOException {
+        return JACKSON.readValue(Request.Post(rootUrl + "tickets/" + code + (manualScan ? "?manual=true" : "")).execute().returnContent().asString(), ScanResult.class);
+    }
+
     private ScanResult scan(String code) throws IOException {
-        return JACKSON.readValue(Request.Post(rootUrl + "tickets/" + code).execute().returnContent().asString(), ScanResult.class);
+        return scan(code, false);
     }
 }

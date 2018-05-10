@@ -57,6 +57,11 @@ public class Ticket {
     @Setter
     private Instant scanned; // when ticket was scanned, or null if never scanned
 
+    @Column(name = "manualscan")
+    @Getter
+    @Setter
+    private Boolean manualScan; // true if ticket was reported marked as scanned "manually" (rather than by barcode)
+
     public Ticket(String code, String description, String ticketholder ,TicketType ticketType) {
         this.code = code;
         this.description = description;

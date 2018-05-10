@@ -180,7 +180,7 @@ public class TicketsResource {
     @Path("{code}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ScanResult scanTicket(@PathParam("code") String code) {
+    public ScanResult scanTicket(@PathParam("code") String code, @QueryParam("manual") @DefaultValue("false") Boolean manualScan) {
         return Persistence.exec(session -> {
             ScanResult result;
             Ticket ticket = session.bySimpleNaturalId(Ticket.class).load(code);
@@ -197,6 +197,9 @@ public class TicketsResource {
             } else {
                 // successfully validated
                 ticket.setScanned(Instant.now());
+                if (manualScan != null && manualScan) {
+                    ticket.setManualScan(true);
+                }
                 session.saveOrUpdate(ticket);
                 log.info("* SCANNED VALID TICKET: {} {}", ticket.getCode(), ticket.getDescription());
                 result = new ScanResult(true, "Valid Ticket " + ticket.getCode(), ticket);

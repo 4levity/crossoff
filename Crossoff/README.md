@@ -34,4 +34,4 @@ device won't be able to contact it by default. The easiest way to reconfigure Cr
 different server IP address for your test environment is to simply edit the file 
 **src/main/java/org/pricelessfestival/crossoff/Scanner.java** 
 to change the IP address at the top of the file, then Build / Make Project, and load the modified
-app onto your device.
+app onto your device. (Janky? Perhaps, but if you don't like it, send me a pull request.)

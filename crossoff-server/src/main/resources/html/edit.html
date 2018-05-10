@@ -79,8 +79,11 @@
         var deleteDisabled;
         if (ticket.scanned) {
             // convert UTC seconds.milliseconds timestamp into browser-local time string
-            scanned = new Date(1000 * ticket.scanned).toLocaleString()
-                    + " <button type=button onclick=unscan()>Remove Scan</button>";
+            scanned = new Date(1000 * ticket.scanned).toLocaleString();
+            if (ticket.manualScan) {
+                scanned += " (manual scan)";
+            }
+            scanned += " <button type=button onclick=unscan()>Remove Scan</button>";
             deleteDisabled = true;
         } else {
             scanned = "never <button type=button onclick=scan()>Scan Now</button>";
