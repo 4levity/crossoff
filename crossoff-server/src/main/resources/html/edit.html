@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html><head><title>crossoff</title><script>
+    var ticket;
     function ticketCode() {
         if (window.location.search.startsWith("?code=")) {
             return window.location.search.substr(6);
@@ -11,7 +12,8 @@
         var request = new XMLHttpRequest();
         request.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                showTicket(JSON.parse(this.responseText));
+                ticket = JSON.parse(this.responseText);
+                showTicket();
             }
         };
         request.open("GET","/tickets/" + ticketCode(),true);
@@ -26,7 +28,8 @@
             if (this.readyState == 4 && this.status == 200) {
                 var response = JSON.parse(this.responseText);
                 if (response.code) {
-                    showTicket(response);
+                    ticket = response;
+                    showTicket();
                 } else {
                     if (response.message && response.ticket) {
                         document.getElementById("scanresult").innerHTML = "Scanned " + response.ticket.code + " / " + response.message;
@@ -74,27 +77,23 @@
             loadTicket();
         }
     }
-    function showTicket(ticket) {
+    function showTicket() {
         var scanned;
-        var deleteDisabled;
         if (ticket.scanned) {
             // convert UTC seconds.milliseconds timestamp into browser-local time string
             scanned = new Date(1000 * ticket.scanned).toLocaleString();
             if (ticket.manualScan) {
                 scanned += " (manual scan)";
             }
-            scanned += " <button type=button onclick=unscan()>Remove Scan</button>";
-            deleteDisabled = true;
+            scanned += "<br/><button type=button onclick=unscan()>Remove Scan</button>";
         } else {
-            scanned = "never <button type=button onclick=scan()>Scan Now</button>";
-            deleteDisabled = false;
+            scanned = "never<br/><button type=button onclick=scan()>Scan Now</button>";
         }
         document.getElementById("code").innerHTML = ticket.code;
         document.getElementById("ticketholder").value = ticket.ticketholder || '';
         selectTicketType(ticket.ticketType);
         document.getElementById("description").value = ticket.description;
         document.getElementById("scanned").innerHTML = scanned;
-        document.getElementById("deletebutton").disabled = deleteDisabled;
     }
     function noTicket() {
         document.getElementById("code").innerHTML = "loading...";
@@ -102,7 +101,8 @@
         selectTicketType("UNSPECIFIED");
         document.getElementById("description").value = '';
         document.getElementById("scanned").innerHTML = '';
-        document.getElementById("deletebutton").disabled = true;
+        document.getElementById("inputlock").checked = true;
+        lockUnlock();
     }
     function selectTicketType(ticketType) {
         var select = document.getElementById("tickettype");
@@ -112,12 +112,21 @@
             }
         }
     }
+    function lockUnlock() {
+        var disableValue = document.getElementById("inputlock").checked;
+        document.getElementById("ticketholder").disabled = disableValue;
+        document.getElementById("tickettype").disabled = disableValue;
+        document.getElementById("description").disabled = disableValue;
+        document.getElementById("savebutton").disabled = disableValue;
+        document.getElementById("deletebutton").disabled = disableValue || !ticket || ticket.scanned; // can't delete if scanned
+    }
 </script></head>
 <body onload=loadTicket()>
 <h3><a href="/">Crossoff</a> - Edit Ticket</h3>
 <table>
     <tr><td>Code:</td><td style='font-family:monospace'><output id=code></output></td></tr>
-    <tr><td>Ticketholder:</td><td><input type=textbox size=40 id=ticketholder /></td></tr>
+    <tr><td>&nbsp;</td><td><input type=checkbox id=inputlock onclick="lockUnlock()"/><label for=inputlock>Locked</label></td></tr>
+    <tr><td>Ticketholder:</td><td><input type=textbox size=40 id="ticketholder"/></td></tr>
     <tr><td>Ticket Type:</td><td><select id=tickettype>
         <option>UNSPECIFIED</option>
         <option>WILL_CALL</option>
@@ -126,10 +135,10 @@
         <option>MOBILE</option>
         <option>PHYSICAL_MAILED</option>
     </select></td></tr>
-    <tr><td>Description:</td><td><input type=textbox size=70 id=description /></td></tr>
-    <tr><td><button type=button onclick=save()>Save Changes</button><br/></td></tr>
+    <tr><td>Description:</td><td><input type=textbox size=40 id=description /></td></tr>
+    <tr><td><button type=button id=savebutton onclick=save()>Save Changes</button></td>
+        <td><button type=button id=deletebutton onclick=deleteTicket()>Delete this ticket</button></td></tr>
     <tr><td>Scanned:</td><td><output id=scanned></output><div style='font-weight:bold' id=scanresult></div></td></tr>
-    <tr><td><button type=button id=deletebutton onclick=deleteTicket()>DELETE this ticket</button></td></tr>
 </table>
 </ul>
 </body></html>
