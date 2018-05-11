@@ -230,6 +230,46 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
+    public void voidTicket() throws IOException {
+        addTickets("A");
+        Ticket ticket = getTickets().get("A");
+        assertNull(ticket.getVoided());
+        // don't do anything to it (unvoid it)
+        Ticket updateTicket = new Ticket();
+        updateTicket.setVoided(false);
+        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A")
+                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .execute().returnResponse().getStatusLine().getStatusCode());
+        ticket = getTickets().get("A");
+        assertNull(ticket.getVoided());
+        // void it
+        updateTicket.setVoided(true);
+        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A")
+                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .execute().returnResponse().getStatusLine().getStatusCode());
+        ticket = getTickets().get("A");
+        assertTrue(ticket.getVoided());
+
+        // try to scan it
+        ScanResult result = scan("A");
+        assertFalse(result.isAccepted());
+        assertTrue(result.getMessage().toLowerCase().contains("void"));
+
+        // unvoid it
+        updateTicket.setVoided(false);
+        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A")
+                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .execute().returnResponse().getStatusLine().getStatusCode());
+        ticket = getTickets().get("A");
+        assertNull(ticket.getVoided());
+
+        // scan it
+        result = scan("A");
+        assertTrue(result.isAccepted());
+        assertFalse(result.getMessage().toLowerCase().contains("void"));
+    }
+
+    @Test
     public void deleteTicket() throws IOException {
         addTickets("A","B");
         scan("A");

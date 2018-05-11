@@ -1,7 +1,7 @@
 package org.pricelessfestival.crossoff.scanner;
 
-import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -20,10 +20,11 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int BARCODE_READER_REQUEST_CODE = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final Uri SEARCH_UI_URI = Uri.parse(String.format(
+            "http://%s:%d", Scanner.CROSSOFF_SERVER_HOST_ADDR, Scanner.CROSSOFF_SERVER_PORT));
 
     private TextView mResultTextView;
     private Button mBarcodeButton;
-    private Scanner scanner = new Scanner();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,6 +37,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), BarcodeCaptureActivity.class);
                 startActivityForResult(intent, BARCODE_READER_REQUEST_CODE);
+            }
+        });
+        findViewById(R.id.search_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Intent.ACTION_VIEW, SEARCH_UI_URI));
             }
         });
     }

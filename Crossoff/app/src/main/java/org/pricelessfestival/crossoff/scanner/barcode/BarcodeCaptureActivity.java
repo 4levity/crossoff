@@ -80,7 +80,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
 
         boolean autoFocus = true;
-        boolean useFlash = false;
+        boolean useFlash = true;
 
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
@@ -238,7 +238,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
             Log.d(TAG, "Camera permission granted - initialize the camera source");
             // we have permission, so create the camerasource
             boolean autoFocus = true;
-            boolean useFlash = false;
+            boolean useFlash = true;
             createCameraSource(autoFocus, useFlash);
             return;
         }

@@ -8,7 +8,8 @@ import java.util.regex.Pattern;
 public class Scanner {
 
     // if running as Android Virtual Device, 10.0.2.2 is the magic address of host system localhost
-    private static final String CROSSOFF_SERVER_HOST_ADDR = "10.0.2.2";
+    public static final String CROSSOFF_SERVER_HOST_ADDR = "10.0.2.2";
+    public static final int CROSSOFF_SERVER_PORT = 8080;
 
     // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
     private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
@@ -28,7 +29,7 @@ public class Scanner {
 
     private static void serverScan(String ticketCode, final ResultHandler consumer) {
         HttpClient httpClient = new HttpClient();
-        String url = "http://" + CROSSOFF_SERVER_HOST_ADDR + ":8080/tickets/" + ticketCode;
+        String url = "http://" + CROSSOFF_SERVER_HOST_ADDR + ":" + CROSSOFF_SERVER_PORT + "/tickets/" + ticketCode;
         httpClient.post(url, "", new HttpClient.Handler() {
             @Override
             public void accept(int statusCode, String body) {

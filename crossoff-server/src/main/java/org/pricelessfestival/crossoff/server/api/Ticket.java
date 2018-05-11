@@ -62,7 +62,12 @@ public class Ticket {
     @Setter
     private Boolean manualScan; // true if ticket was reported marked as scanned "manually" (rather than by barcode)
 
-    public Ticket(String code, String description, String ticketholder ,TicketType ticketType) {
+    @Column(name = "voided")
+    @Getter
+    @Setter
+    private Boolean voided; // true if ticket was voided (e.g. refund issued, ticket canceled)
+
+    public Ticket(String code, String description, String ticketholder, TicketType ticketType) {
         this.code = code;
         this.description = description;
         this.ticketholder = ticketholder;

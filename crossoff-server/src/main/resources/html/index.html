@@ -13,7 +13,7 @@
         request.send(null);
     }
     function showTickets() {
-        var searchTerm = document.getElementById('searchbox').value.toUpperCase();
+        var searchTermUppercase = document.getElementById('searchbox').value.toUpperCase();
         var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
                 + "<td onclick=loadBy('code')>Code&nbsp;</td>"
                 + "<td onclick=loadBy('ticketholder')>Ticketholder&nbsp;</td>"
@@ -21,23 +21,25 @@
                 + "</tr></thead><tbody>";
         var row;
         var scanned = 0;
-        var tdStyle = 'border-bottom:1px solid black';
         for (row = 0; row < tickets.length; row++) {
             var ticket = tickets[row];
-            if (searchTerm == ''
-                    || ticket.code.indexOf(searchTerm) > -1
-                    || ticket.ticketholder.toUpperCase().indexOf(searchTerm) > -1) {
-                var tdCodeStyle;
+            if (ticket.scanned) {
+                scanned++;
+            }
+            if (searchTermUppercase == ''
+                    || ticket.code.indexOf(searchTermUppercase) > -1
+                    || ticket.ticketholder.toUpperCase().indexOf(searchTermUppercase) > -1) {
+                var tdStyle = 'border-bottom:1px solid black';
                 if (ticket.scanned) {
-                    scanned++;
-                    tdCodeStyle = tdStyle + ";text-decoration:line-through";
-                } else {
-                    tdCodeStyle = tdStyle;
+                    tdStyle += ";text-decoration:line-through";
+                }
+                if (ticket.voided) {
+                    tdStyle += ";color:red;font-weight:bold"
                 }
                 ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>"
-                        + "<td style='font-family:monospace;" + tdCodeStyle + "'>" + ticket.code + "&nbsp;</td>"
-                        + "<td style='" + tdCodeStyle + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
-                        + "<td style='" + tdStyle + "'>" + ticket.description +  "&nbsp;</td>"
+                        + "<td style='font-family:monospace;" + tdStyle + "'>" + ticket.code + "&nbsp;</td>"
+                        + "<td style='" + tdStyle + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
+                        + "<td style='" + tdStyle + "'>" + (ticket.voided ? "VOID" : ticket.description) +  "&nbsp;</td>"
                         + "</tr>";
             }
         }
@@ -46,7 +48,7 @@
         document.getElementById("tickets").innerHTML = ticketList;
     }
 </script></head>
-<body onload=loadBy("ticketholder")>
+<body style="background-color:white" onload=loadBy("ticketholder")>
 <h3><a href="/">Crossoff</a> - Tickets</h3>
 <div id=summary></div>
 <div id=search>Search: <input type=textbox size=20 id=searchbox oninput="showTickets()"/>

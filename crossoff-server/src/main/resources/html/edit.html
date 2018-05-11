@@ -26,13 +26,14 @@
         var request = new XMLHttpRequest();
         request.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                var response = JSON.parse(this.responseText);
-                if (response.code) {
-                    ticket = response;
+                var result = JSON.parse(this.responseText);
+                if (result.code) {
+                    ticket = result;
                     showTicket();
                 } else {
-                    if (response.message && response.ticket) {
-                        document.getElementById("scanresult").innerHTML = "Scanned " + response.ticket.code + " / " + response.message;
+                    if (result.message && result.ticket) {
+                        document.getElementById("scanresult").innerHTML = (result.accepted ? "SCAN ACCEPTED " : "DENIED ")
+                                + result.ticket.code + " / " + result.message;
                     }
                     loadTicket();
                 }
@@ -65,6 +66,11 @@
             modifyTicket("DELETE", null, null);
         }
     }
+    function voidTicket(voided) {
+        if (confirm("Are you sure you want to set voided = " + voided + "?")) {
+            modifyTicket("PUT", null, JSON.stringify({voided: voided}));
+        }
+    }
     function save() {
         if (confirm("Are you sure you want to UPDATE DETAILS OF THIS TICKET?")) {
             var ticket = {
@@ -89,8 +95,14 @@
         } else {
             scanned = "never<br/><button type=button onclick=scan()>Scan Now</button>";
         }
-        document.getElementById("code").innerHTML = ticket.code;
-        document.getElementById("ticketholder").value = ticket.ticketholder || '';
+        var barcodeHtml;
+        if (ticket.voided) {
+            barcodeHtml = "<span style='color:red;font-weight:bold'>VOID " + ticket.code + "</span>";
+        } else {
+            barcodeHtml = ticket.code;
+        }
+        document.getElementById("code").innerHTML = barcodeHtml;
+        document.getElementById("ticketholder").value = (ticket.voided ? "VOID " : "") + (ticket.ticketholder || '');
         selectTicketType(ticket.ticketType);
         document.getElementById("description").value = ticket.description;
         document.getElementById("scanned").innerHTML = scanned;
@@ -119,9 +131,11 @@
         document.getElementById("description").disabled = disableValue;
         document.getElementById("savebutton").disabled = disableValue;
         document.getElementById("deletebutton").disabled = disableValue || !ticket || ticket.scanned; // can't delete if scanned
+        document.getElementById("voidbutton").disabled = disableValue || !ticket || ticket.scanned || ticket.voided; // scanned or void
+        document.getElementById("unvoidbutton").disabled = disableValue || !ticket || !ticket.voided; // void
     }
 </script></head>
-<body onload=loadTicket()>
+<body style="background-color:white" onload=loadTicket()>
 <h3><a href="/">Crossoff</a> - Edit Ticket</h3>
 <table>
     <tr><td>Code:</td><td style='font-family:monospace'><output id=code></output></td></tr>
@@ -137,7 +151,9 @@
     </select></td></tr>
     <tr><td>Description:</td><td><input type=textbox size=40 id=description /></td></tr>
     <tr><td><button type=button id=savebutton onclick=save()>Save Changes</button></td>
-        <td><button type=button id=deletebutton onclick=deleteTicket()>Delete this ticket</button></td></tr>
+        <td><button type=button id=deletebutton onclick=deleteTicket()>Delete</button>&nbsp;
+            <button type=button id=voidbutton onclick=voidTicket(true)>Void</button>&nbsp;
+            <button type=button id=unvoidbutton onclick=voidTicket(false)>Unvoid</button></td></tr>
     <tr><td>Scanned:</td><td><output id=scanned></output><div style='font-weight:bold' id=scanresult></div></td></tr>
 </table>
 </ul>

@@ -143,6 +143,13 @@ public class TicketsResource {
                 ticket.setTicketType(updateTicket.getTicketType());
                 modified = true;
             }
+            // void or unvoid
+            if (updateTicket.getVoided() != null && (
+                    (updateTicket.getVoided() && (ticket.getVoided() == null || !ticket.getVoided()))
+                    || (!updateTicket.getVoided() && ticket.getVoided() != null && ticket.getVoided()) ) ) {
+                ticket.setVoided(updateTicket.getVoided() ? true : null);
+                modified = true;
+            }
             // save changes
             if (modified) {
                 log.info("* UPDATED TICKET DETAILS: {} {} / {}", ticket.getCode(), ticket.getTicketholder(), ticket.getDescription());
@@ -195,6 +202,10 @@ public class TicketsResource {
                 String interval = TimeUtil.formatDuration(Duration.between(ticket.getScanned(), Instant.now()));
                 log.warn("* DUPLICATE SCAN: {} (scanned {} ago, {})", ticket.getCode(), interval, scannedAt);
                 result = new ScanResult(false, "Already scanned " + interval + " ago, " + scannedAt, ticket);
+            } else if (ticket.getVoided() != null && ticket.getVoided()) {
+                // ticket was voided!
+                log.warn("* VOIDED TICKET SCAN: {}", ticket.getCode());
+                result = new ScanResult(false, "Voided - ticket was cancelled/refunded!", ticket);
             } else {
                 // successfully validated
                 ticket.setScanned(Instant.now());
