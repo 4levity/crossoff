@@ -3,6 +3,8 @@ package org.pricelessfestival.crossoff.server;
 import lombok.extern.log4j.Log4j2;
 import org.junit.After;
 import org.junit.Before;
+import org.pricelessfestival.crossoff.server.service.CrossoffWebServer;
+import org.pricelessfestival.crossoff.server.service.Persistence;
 
 import javax.ws.rs.core.Response;
 
@@ -12,12 +14,12 @@ import javax.ws.rs.core.Response;
 @Log4j2
 public abstract class CrossoffIntegrationTests extends CrossoffTests {
 
-    static int HTTP_OK = Response.Status.OK.getStatusCode();
-    static int HTTP_NO_CONTENT = Response.Status.NO_CONTENT.getStatusCode();
-    static int HTTP_BAD_REQUEST = Response.Status.BAD_REQUEST.getStatusCode();
+    public static final int HTTP_OK = Response.Status.OK.getStatusCode();
+    public static final int HTTP_NO_CONTENT = Response.Status.NO_CONTENT.getStatusCode();
+    public static final int HTTP_BAD_REQUEST = Response.Status.BAD_REQUEST.getStatusCode();
 
-    private static int TEST_WEBSERVER_PORT = 8081;
-    String rootUrl = "http://localhost:" + TEST_WEBSERVER_PORT + "/";
+    private static final int TEST_WEBSERVER_PORT = 8081;
+    public static final String rootUrl = "http://localhost:" + TEST_WEBSERVER_PORT + "/";
 
     @Before
     public void setupDatabase() {

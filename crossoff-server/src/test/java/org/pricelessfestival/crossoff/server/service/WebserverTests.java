@@ -1,8 +1,9 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.service;
 
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.junit.Test;
+import org.pricelessfestival.crossoff.server.CrossoffIntegrationTests;
 
 import java.io.IOException;
 

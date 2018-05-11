@@ -1,4 +1,4 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

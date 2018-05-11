@@ -1,4 +1,4 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.junit.Test;
+import org.pricelessfestival.crossoff.server.CrossoffIntegrationTests;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
 import static org.junit.Assert.*;
-import static org.pricelessfestival.crossoff.server.GlobalObjectMapper.JACKSON;
+import static org.pricelessfestival.crossoff.server.service.GlobalObjectMapper.JACKSON;
 
 /**
  * Created by ivan on 4/26/18.

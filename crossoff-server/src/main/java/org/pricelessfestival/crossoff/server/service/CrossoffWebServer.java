@@ -1,4 +1,4 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.eclipse.jetty.server.Handler;
@@ -9,6 +9,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.pricelessfestival.crossoff.server.api.TicketsResource;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ import java.util.EnumSet;
  * Created by ivan on 4/26/18.
  */
 @Log4j2
-class CrossoffWebServer {
+public class CrossoffWebServer {
 
     private int port;
     private Server server;

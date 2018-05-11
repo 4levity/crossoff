@@ -1,9 +1,10 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.api;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.Session;
+import org.pricelessfestival.crossoff.server.service.Persistence;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -202,7 +203,7 @@ public class TicketsResource {
                 }
                 session.saveOrUpdate(ticket);
                 log.info("* SCANNED VALID TICKET: {} {}", ticket.getCode(), ticket.getDescription());
-                result = new ScanResult(true, "Valid Ticket " + ticket.getCode(), ticket);
+                result = new ScanResult(true, "Valid Ticket", ticket);
             }
             return result;
         });

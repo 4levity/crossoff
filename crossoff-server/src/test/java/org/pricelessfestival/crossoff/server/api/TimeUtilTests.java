@@ -1,6 +1,7 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.api;
 
 import org.junit.Test;
+import org.pricelessfestival.crossoff.server.CrossoffTests;
 
 import java.time.Duration;
 import java.time.Instant;

@@ -28,7 +28,7 @@
         <property name="jdbc.time_zone">UTC</property>
 
         <!-- annotated entity classes -->
-        <mapping class="org.pricelessfestival.crossoff.server.Ticket" />
+        <mapping class="org.pricelessfestival.crossoff.server.api.Ticket" />
 
     </session-factory>
 </hibernate-configuration>

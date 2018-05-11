@@ -1,4 +1,4 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.api;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import lombok.AllArgsConstructor;

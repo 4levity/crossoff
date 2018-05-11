@@ -1,4 +1,4 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.api;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -12,7 +12,6 @@ import java.util.Locale;
 public class TimeUtil {
 
     public static String formatTimestamp(Instant timestamp, ZoneId zone) {
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("E MM/dd/yy h:mm a")
                 .withLocale( Locale.US ).withZone(zone);
         return formatter.format(timestamp);

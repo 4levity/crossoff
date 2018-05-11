@@ -1,4 +1,4 @@
-package org.pricelessfestival.crossoff.server;
+package org.pricelessfestival.crossoff.server.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.h2.tools.Server;
