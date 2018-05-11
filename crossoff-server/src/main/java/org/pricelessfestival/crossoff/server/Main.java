@@ -11,6 +11,7 @@ public class Main {
     private static final int WEBSERVER_PORT = 8080;
 
     public static void main(String... args) throws Exception {
+        System.setProperty("log.file.enabled", "true");
         Persistence.init("hibernate.cfg.xml", true);
         new CrossoffWebServer(WEBSERVER_PORT).start();
     }

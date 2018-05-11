@@ -1,7 +1,9 @@
+plugins {
+    id 'java'
+}
 repositories {
     mavenCentral()
 }
-apply plugin: 'java'
 
 group 'org.pricelessfestival.crossoff'
 version '1.0'
