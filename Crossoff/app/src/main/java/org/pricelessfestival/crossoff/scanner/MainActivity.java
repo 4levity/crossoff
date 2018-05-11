@@ -1,5 +1,6 @@
 package org.pricelessfestival.crossoff.scanner;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -44,10 +45,24 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == BARCODE_READER_REQUEST_CODE) {
             if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (data != null) {
+                    mBarcodeButton.setEnabled(false);
+                    mResultTextView.setText("Please wait, contacting server...");
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
-                    mResultTextView.setText(Scanner.scanTicket(barcode.displayValue));
-                } else
+                    Scanner.scanTicket(barcode.displayValue, new Scanner.ResultHandler() {
+                        @Override
+                        public void accept(final String result) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mResultTextView.setText(result);
+                                    mBarcodeButton.setEnabled(true);
+                                }
+                            });
+                        }
+                    });
+                } else {
                     mResultTextView.setText(R.string.no_barcode_captured);
+                }
             } else {
                 String errorMessage = String.format(getString(R.string.barcode_error_format),
                         CommonStatusCodes.getStatusCodeString(resultCode));

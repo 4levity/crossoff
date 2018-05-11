@@ -3,50 +3,54 @@ package org.pricelessfestival.crossoff.scanner;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.regex.Pattern;
+
 public class Scanner {
 
     // if running as Android Virtual Device, 10.0.2.2 is the magic address of host system localhost
     private static final String CROSSOFF_SERVER_HOST_ADDR = "10.0.2.2";
 
-    public static CharSequence scanTicket(String ticketCode) {
-        String result;
-        if (!looksLikeTicketBarcode(ticketCode)) {
-            result = "Weird barcode scanned. Make sure camera is pointed at ticket!\n(scan = "
-                    + ticketCode + ")";
+    // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
+    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
+
+    public static boolean validTicketCode(String code) {
+        return code != null && VALID_TICKET_CODE.matcher(code).matches();
+    }
+
+    public static void scanTicket(String ticketCode, ResultHandler consumer) {
+        if (!validTicketCode(ticketCode)) {
+            consumer.accept("Weird barcode scanned. "
+                    + "Make sure camera is pointed at ticket!\n(scan = " + ticketCode + ")");
         } else {
-            result = serverResult(ticketCode);
+            serverScan(ticketCode, consumer);
         }
-        return result;
     }
 
-    private static boolean looksLikeTicketBarcode(String ticketCode) {
-        // consider improving validation
-        return ticketCode != null && ticketCode.length() > 1;
-    }
-
-    private static String serverResult(String ticketCode) {
+    private static void serverScan(String ticketCode, final ResultHandler consumer) {
         HttpClient httpClient = new HttpClient();
         String url = "http://" + CROSSOFF_SERVER_HOST_ADDR + ":8080/tickets/" + ticketCode;
-        final int[] statusCode = new int[1];
-        final String[] body = new String[1];
-        boolean commSuccess = httpClient.post(url, "", new HttpClient.Handler() {
+        httpClient.post(url, "", new HttpClient.Handler() {
             @Override
-            public void accept(int code, String content) {
-                statusCode[0] = code;
-                body[0] = content;
+            public void accept(int statusCode, String body) {
+                boolean accepted = false;
+                try {
+                    String scanResult;
+                    if (body == null) {
+                        scanResult = "ERROR: Communication with server failed. Check network and try again.";
+                    } else if (statusCode == 200) {
+                        scanResult = parseScanResult(body);
+                    } else {
+                        scanResult = "ERROR: Unexpected response from server: HTTP " + statusCode;
+                    }
+                    accepted = true;
+                    consumer.accept(scanResult);
+                } finally {
+                    if (!accepted) {
+                        consumer.accept("Internal error!");
+                    }
+                }
             }
         });
-        String result;
-        if (commSuccess) {
-            if (statusCode[0] == 200) {
-                result = parseScanResult(body[0]);
-            } else {
-                result = "ERROR: Unexpected response from server: HTTP " + statusCode[0];
-            }
-        } else {
-            result = "ERROR: Communication with server failed. Check network and try again.";
-        }
-        return result;
     }
 
     private static String parseScanResult(String body) {
@@ -92,5 +96,10 @@ public class Scanner {
             result = "ERROR: Failed to parse server response!";
         }
         return result;
+    }
+
+    public interface ResultHandler {
+
+        void accept(final String scanResult);
     }
 }
