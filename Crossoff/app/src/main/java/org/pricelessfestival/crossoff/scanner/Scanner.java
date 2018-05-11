@@ -76,10 +76,11 @@ public class Scanner {
             }
             if (message != null) {
                 if (accepted) {
-                    result = "Ticket Was Accepted!\n" + message;
+                    result = "Scan Accepted: " + message;
                     if (ticket != null) {
                         try {
-                            result += "\n" + ticket.getString("description");
+                            result += "\n" + ticket.getString("description") + "\n"
+                                    + "for " + ticket.getString("ticketholder");
                         } catch (JSONException e) {
                             result += "\n(error retrieving ticket type info!)";
                         }
