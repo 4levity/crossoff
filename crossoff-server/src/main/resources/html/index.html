@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><title>crossoff</title><script>
+<html><head><title>crossoff</title><meta name="viewport" content="width=device-width, initial-scale=1"><script>
     function loadBy(orderBy) {
         var request = new XMLHttpRequest();
         request.onreadystatechange = function () {
@@ -14,35 +14,24 @@
         var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
                 + "<td onclick=loadBy('code')>Code&nbsp;</td>"
                 + "<td onclick=loadBy('ticketholder')>Ticketholder&nbsp;</td>"
-                + "<td onclick=loadBy('ticketType')>Ticket Type&nbsp;</td>"
                 + "<td onclick=loadBy('description')>Description&nbsp;</td>"
-                + "<td onclick=loadBy('scanned')>Scanned</td>"
                 + "</tr></thead><tbody>";
         var row;
         var scanned = 0;
         var tdStyle = 'border-bottom:1px solid black';
         for (row = 0; row < tickets.length; row++) {
             var ticket = tickets[row];
-            var scanText;
             var tdCodeStyle;
             if (ticket.scanned) {
-                // convert UTC seconds.milliseconds timestamp into browser-local time string
-                scanText = new Date(1000 * ticket.scanned).toLocaleString();
-                if (ticket.manualScan) {
-                    scanText += " (m)";
-                }
                 scanned++;
                 tdCodeStyle = tdStyle + ";text-decoration:line-through";
             } else {
-                scanText = "never";
                 tdCodeStyle = tdStyle;
             }
-            ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>" +
-                    "<td style='font-family:monospace;" + tdCodeStyle + "'>" + ticket.code + "&nbsp;</td>" +
-                    "<td style='" + tdCodeStyle + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>" +
-                    "<td style='" + tdStyle + "'>" + (ticket.ticketType || 'UNSPECIFIED')  + "&nbsp;</td>" +
-                    "<td style='" + tdStyle + "'>" + ticket.description +  "&nbsp;</td>" +
-                    "<td style='" + tdStyle + "'>" + scanText + "</td>"
+            ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>"
+                    + "<td style='font-family:monospace;" + tdCodeStyle + "'>" + ticket.code + "&nbsp;</td>"
+                    + "<td style='" + tdCodeStyle + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
+                    + "<td style='" + tdStyle + "'>" + ticket.description +  "&nbsp;</td>"
                     + "</tr>";
         }
         ticketList += "</tbody></table>";
@@ -50,7 +39,7 @@
         document.getElementById("tickets").innerHTML = ticketList;
     }
 </script></head>
-<body onload=loadBy("description")>
+<body onload=loadBy("ticketholder")>
 <h3><a href="/">Crossoff</a> - Tickets</h3>
 <div id=summary></div>
 <div id=tickets></div>

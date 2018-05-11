@@ -33,7 +33,7 @@ public class TicketsResource {
             Root<Ticket> root = ticketQuery.from(Ticket.class);
             if (orderBy != null) {
                 try {
-                    ticketQuery.orderBy(criteriaBuilder.asc(root.get(orderBy)));
+                    ticketQuery.orderBy(criteriaBuilder.asc(criteriaBuilder.lower(root.get(orderBy))));
                 } catch (IllegalArgumentException e) {
                     throw new BadRequestException("cannot order by unknown column: " + orderBy);
                 }
