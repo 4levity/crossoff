@@ -53,17 +53,30 @@ public class Persistence {
     }
 
     private static void finish(boolean completed, Session session) {
+        boolean rollback = !completed;
         try {
             Transaction transaction = session.getTransaction();
             if (transaction == null || !transaction.isActive()) {
                 log.error("finish() called with no active Transaction", new Exception());
             }
-            if (completed) {
-                session.getTransaction().commit();
+            if (rollback) {
+                log.warn("errors occurred during transaction, rolling back");
             } else {
-                session.getTransaction().rollback();
+                try {
+                    session.getTransaction().commit();
+                } catch (RuntimeException e) {
+                    log.error("commit failed, switching to rollback", e);
+                    rollback = true;
+                }
             }
         } finally {
+            if (rollback) {
+                try {
+                    session.getTransaction().rollback();
+                } catch (RuntimeException e) {
+                    log.error("rollback failed", e);
+                }
+            }
             session.close();
         }
     }
