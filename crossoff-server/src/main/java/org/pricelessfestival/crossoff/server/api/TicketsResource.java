@@ -1,20 +1,12 @@
 package org.pricelessfestival.crossoff.server.api;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
-import org.hibernate.Session;
 import org.pricelessfestival.crossoff.server.service.Persistence;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -27,87 +19,27 @@ public class TicketsResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Ticket> getAllTickets(@QueryParam("sort") String orderBy) {
-        return Persistence.exec(session -> {
-            CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-            CriteriaQuery<Ticket> ticketQuery = criteriaBuilder.createQuery(Ticket.class);
-            Root<Ticket> root = ticketQuery.from(Ticket.class);
-            if (orderBy != null) {
-                try {
-                    ticketQuery.orderBy(criteriaBuilder.asc(criteriaBuilder.lower(root.get(orderBy))));
-                } catch (IllegalArgumentException e) {
-                    throw new BadRequestException("cannot order by unknown column: " + orderBy);
-                }
-            }
-            return session.createQuery(ticketQuery).getResultList();
-        });
+        return Persistence.exec(new TransactGetAllTickets(orderBy));
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<Ticket> createTickets(List<Ticket> tickets) {
-        return Persistence.exec(session -> {
-            if (tickets == null || tickets.size() == 0) {
-                log.warn("client tried to add empty ticket list");
-                throw new BadRequestException("must provide list of tickets");
-            }
-            tickets.forEach(ticket -> {
-                // ticket code is valid (nonempty)
-                if (!Ticket.validTicketCode(ticket.getCode())) {
-                    log.warn("client tried to add ticket with invalid ticket code: " + ticket.getCode());
-                    throw new BadRequestException("invalid ticket code");
-                }
-                // ticket type is valid
-                if (ticket.getTicketType() == null) {
-                    log.warn("client tried to add ticket without specifying ticket type");
-                    throw new BadRequestException("must specify ticketType value");
-                }
-                // check for duplicates within submission
-                tickets.forEach(ticketMatch -> {
-                    if (ticketMatch != ticket && ticketMatch.getCode().equals(ticket.getCode())) {
-                        log.warn("client tried to add ticket list containing duplicates within itself");
-                        throw new BadRequestException("submission contains duplicate ticket code " + ticket.getCode());
-                    }
-                });
-                // check for duplicates in database
-                Ticket duplicateTicket = session.bySimpleNaturalId(Ticket.class).load(ticket.getCode());
-                if (duplicateTicket != null) {
-                    log.warn("client tried to add ticket list containing tickets already in database");
-                    throw new BadRequestException("preexisting duplicate ticket code " + ticket.getCode());
-                }
-            });
-            // save tickets
-            tickets.forEach(ticket -> {
-                Ticket newTicket = new Ticket(
-                        ticket.getCode(),
-                        ticket.getDescription(),
-                        ticket.getTicketholder(),
-                        ticket.getTicketType());
-                session.saveOrUpdate(newTicket);
-            });
-            log.info("ADDED {} tickets", tickets.size());
-            return tickets;
-        });
+        return Persistence.exec(new TransactCreateTickets(tickets));
     }
 
     @GET
     @Path("{code}")
     @Produces(MediaType.APPLICATION_JSON)
     public Ticket getTicketByCode(@PathParam("code") String code) {
-        return Persistence.exec(session -> ticket(session, code));
+        return Persistence.exec(new TransactGetTicket(code));
     }
 
     @DELETE
     @Path("{code}")
     public Response deleteTicketByCode(@PathParam("code") String code) {
-        return Persistence.exec(session -> {
-            Ticket ticket = ticket(session, code);
-            if (ticket.getScanned() != null) {
-                throw new BadRequestException("cannot delete a ticket that has a scan timestamp");
-            }
-            session.delete(ticket);
-            return Response.noContent().build();
-        });
+        return Persistence.exec(new TransactDeleteTicket(code));
     }
 
     @PUT
@@ -115,48 +47,7 @@ public class TicketsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Ticket updateTicket(@PathParam("code") String code, Ticket updateTicket) {
-        if (updateTicket == null) {
-            throw new BadRequestException("no body");
-        }
-        return Persistence.exec(session -> {
-            Ticket ticket = ticket(session, code);
-            boolean modified = false;
-            // update description
-            if (!Strings.isNullOrEmpty(updateTicket.getDescription())
-                    && !updateTicket.getDescription().equals(ticket.getDescription())) {
-                ticket.setDescription(updateTicket.getDescription()); // update description
-                modified = true;
-            }
-            // update or unset ticketholder
-            if (updateTicket.getTicketholder() != null && updateTicket.getTicketholder().isEmpty()
-                    && ticket.getTicketholder() != null) {
-                ticket.setTicketholder(null); // empty string = unset (set to null)
-                modified = true;
-            } else if (updateTicket.getTicketholder() != null
-                    && (ticket.getTicketholder() == null || !updateTicket.getTicketholder().equals(ticket.getTicketholder()))) {
-                ticket.setTicketholder(updateTicket.getTicketholder()); // set or change ticketholder name
-                modified = true;
-            }
-            // change ticket type
-            if (updateTicket.getTicketType() != null
-                    && (ticket.getTicketType() == null || !updateTicket.getTicketType().equals(ticket.getTicketType()))) {
-                ticket.setTicketType(updateTicket.getTicketType());
-                modified = true;
-            }
-            // void or unvoid
-            if (updateTicket.getVoided() != null && (
-                    (updateTicket.getVoided() && (ticket.getVoided() == null || !ticket.getVoided()))
-                    || (!updateTicket.getVoided() && ticket.getVoided() != null && ticket.getVoided()) ) ) {
-                ticket.setVoided(updateTicket.getVoided() ? true : null);
-                modified = true;
-            }
-            // save changes
-            if (modified) {
-                log.info("* UPDATED TICKET DETAILS: {} {} / {}", ticket.getCode(), ticket.getTicketholder(), ticket.getDescription());
-                session.saveOrUpdate(ticket);
-            }
-            return ticket;
-        });
+        return Persistence.exec(new TransactUpdateTicket(code, updateTicket));
     }
 
     @PATCH // does not require POST body/entity
@@ -164,13 +55,7 @@ public class TicketsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Ticket unscanTicket(@PathParam("code") String code) {
-        return Persistence.exec(session -> {
-            Ticket ticket = ticket(session, code);
-            ticket.setScanned(null);
-            log.info("* UN-SCANNED TICKET: {} {}", ticket.getCode(), ticket.getDescription());
-            session.saveOrUpdate(ticket);
-            return ticket;
-        });
+        return Persistence.exec(new TransactUnscanTicket(code));
     }
 
     @GET
@@ -189,42 +74,7 @@ public class TicketsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public ScanResult scanTicket(@PathParam("code") String code, @QueryParam("manual") @DefaultValue("false") Boolean manualScan) {
-        return Persistence.exec(session -> {
-            ScanResult result;
-            Ticket ticket = session.bySimpleNaturalId(Ticket.class).load(code);
-            if (ticket == null) {
-                // code is not found in database
-                log.warn("* UNKNOWN TICKET: {}", code);
-                result = new ScanResult(false, "Invalid ticket code: " + code, null);
-            } else if (ticket.getScanned() != null) {
-                // ticket was already scanned
-                String scannedAt = TimeUtil.formatTimestamp(ticket.getScanned(), ZoneId.systemDefault());
-                String interval = TimeUtil.formatDuration(Duration.between(ticket.getScanned(), Instant.now()));
-                log.warn("* DUPLICATE SCAN: {} (scanned {} ago, {})", ticket.getCode(), interval, scannedAt);
-                result = new ScanResult(false, "Already scanned " + interval + " ago, " + scannedAt, ticket);
-            } else if (ticket.getVoided() != null && ticket.getVoided()) {
-                // ticket was voided!
-                log.warn("* VOIDED TICKET SCAN: {}", ticket.getCode());
-                result = new ScanResult(false, "Voided - ticket was cancelled/refunded!", ticket);
-            } else {
-                // successfully validated
-                ticket.setScanned(Instant.now());
-                if (manualScan != null && manualScan) {
-                    ticket.setManualScan(true);
-                }
-                session.saveOrUpdate(ticket);
-                log.info("* SCANNED VALID TICKET: {} {}", ticket.getCode(), ticket.getDescription());
-                result = new ScanResult(true, "Valid Ticket", ticket);
-            }
-            return result;
-        });
+        return Persistence.exec(new TransactScanTicket(code, manualScan));
     }
 
-    private Ticket ticket(Session session, String code) {
-        Ticket ticket = session.bySimpleNaturalId(Ticket.class).load(code);
-        if (ticket == null) {
-            throw new NotFoundException();
-        }
-        return ticket;
-    }
 }

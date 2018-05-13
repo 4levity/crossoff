@@ -76,8 +76,9 @@
             var ticket = {
                 description: document.getElementById("description").value,
                 ticketholder: document.getElementById("ticketholder").value,
-                ticketType: document.getElementById("tickettype").value
-            };
+                ticketType: document.getElementById("tickettype").value,
+                notes: document.getElementById("notes").value
+        };
             modifyTicket("PUT", null, JSON.stringify(ticket));
         } else {
             loadTicket();
@@ -105,6 +106,9 @@
         document.getElementById("ticketholder").value = (ticket.voided ? "VOID " : "") + (ticket.ticketholder || '');
         selectTicketType(ticket.ticketType);
         document.getElementById("description").value = ticket.description;
+        if (ticket.notes) {
+            document.getElementById("notes").value = ticket.notes;
+        }
         document.getElementById("scanned").innerHTML = scanned;
     }
     function noTicket() {
@@ -112,6 +116,7 @@
         document.getElementById("ticketholder").value = '';
         selectTicketType("UNSPECIFIED");
         document.getElementById("description").value = '';
+        document.getElementById("notes").value = '';
         document.getElementById("scanned").innerHTML = '';
         document.getElementById("inputlock").checked = true;
         lockUnlock();
@@ -129,7 +134,7 @@
         document.getElementById("ticketholder").disabled = disableValue;
         document.getElementById("tickettype").disabled = disableValue;
         document.getElementById("description").disabled = disableValue;
-        document.getElementById("savebutton").disabled = disableValue;
+        //document.getElementById("savebutton").disabled = disableValue;
         document.getElementById("deletebutton").disabled = disableValue || !ticket || ticket.scanned; // can't delete if scanned
         document.getElementById("voidbutton").disabled = disableValue || !ticket || ticket.scanned || ticket.voided; // scanned or void
         document.getElementById("unvoidbutton").disabled = disableValue || !ticket || !ticket.voided; // void
@@ -140,7 +145,7 @@
 <table>
     <tr><td>Code:</td><td style='font-family:monospace'><output id=code></output></td></tr>
     <tr><td>&nbsp;</td><td><input type=checkbox id=inputlock onclick="lockUnlock()"/><label for=inputlock>Locked</label></td></tr>
-    <tr><td>Ticketholder:</td><td><input type=textbox size=40 id="ticketholder"/></td></tr>
+    <tr><td>Ticketholder:</td><td><input type=textbox size=40 maxlength=255 id="ticketholder"/></td></tr>
     <tr><td>Ticket Type:</td><td><select id=tickettype>
         <option>UNSPECIFIED</option>
         <option>WILL_CALL</option>
@@ -149,7 +154,9 @@
         <option>MOBILE</option>
         <option>PHYSICAL_MAILED</option>
     </select></td></tr>
-    <tr><td>Description:</td><td><input type=textbox size=40 id=description /></td></tr>
+    <tr><td>Description:</td><td><input type=textbox size=40 maxlength=255 id=description /></td></tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>Door Notes:</td><td><input type=textbox size=60 maxlength=255 id=notes /></td></tr>
     <tr><td><button type=button id=savebutton onclick=save()>Save Changes</button></td>
         <td><button type=button id=deletebutton onclick=deleteTicket()>Delete</button>&nbsp;
             <button type=button id=voidbutton onclick=voidTicket(true)>Void</button>&nbsp;

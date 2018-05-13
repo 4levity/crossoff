@@ -1,6 +1,9 @@
 package org.pricelessfestival.crossoff.server.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
@@ -150,6 +153,21 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
+    public void createFailsWithBlankDescription() throws IOException {
+        assertEquals(HTTP_BAD_REQUEST, addTicket(new Ticket("A", null, "ticketholder", Ticket.TicketType.MOBILE)));
+    }
+
+    @Test
+    public void createSucceedsWithBlankTicketholder() throws IOException {
+        assertEquals(HTTP_OK, addTicket(new Ticket("A", "desc", null, Ticket.TicketType.MOBILE)));
+    }
+
+    @Test
+    public void createFailsWithBlankTicketType() throws IOException {
+        assertEquals(HTTP_BAD_REQUEST, addTicket(new Ticket("A", "desc", "ticketholder", null)));
+    }
+
+    @Test
     public void validExample() throws IOException {
         Map<String, Ticket> exampleTickets = getTicketMap("example", null);
         String[] ticketCodes = new String[exampleTickets.size()];
@@ -187,9 +205,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertTrue(ticket.getDescription().startsWith("GENERIC"));
         Ticket updateTicket = new Ticket();
         updateTicket.setDescription("new description");
-        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A1")
-                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
-                .execute().returnResponse().getStatusLine().getStatusCode());
+        assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
         ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertTrue(ticket.getDescription().startsWith("new descr"));
     }
@@ -201,11 +217,15 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertTrue(ticket.getTicketholder().startsWith("Ticket"));
         Ticket updateTicket = new Ticket();
         updateTicket.setTicketholder("Alice Cooper");
-        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A1")
-                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
-                .execute().returnResponse().getStatusLine().getStatusCode());
+        assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
         ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertTrue(ticket.getTicketholder().startsWith("Alice"));
+
+        // unset
+        updateTicket.setTicketholder("");
+        assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
+        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertNull(ticket.getTicketholder());
     }
 
     @Test
@@ -215,9 +235,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertTrue(ticket.getTicketType().equals(Ticket.TicketType.UNSPECIFIED));
         Ticket updateTicket = new Ticket();
         updateTicket.setTicketType(Ticket.TicketType.PRINT_AT_HOME);
-        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A1")
-                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
-                .execute().returnResponse().getStatusLine().getStatusCode());
+        assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
         ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertTrue(ticket.getTicketType().equals(Ticket.TicketType.PRINT_AT_HOME));
     }
@@ -230,6 +248,35 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     @Test
+    public void updateTicketNotes() throws IOException {
+        addTicket(new Ticket("A", "GA", "Alice", Ticket.TicketType.MOBILE));
+        String notes = "CHECK ID";
+        addTicket(new Ticket("B", "GA", "Bob", Ticket.TicketType.MOBILE).setNotes(notes));
+        Map<String, Ticket> tickets = getTickets();
+        assertEquals(notes, tickets.get("B").getNotes());
+
+        // change a note
+        notes = "WATCH LIST";
+        Ticket updateTicket = new Ticket().setNotes(notes);
+        assertEquals(HTTP_OK, updateTicket("B", updateTicket));
+        assertEquals(notes, getTickets().get("B").getNotes());
+
+        // add a note
+        assertNull(tickets.get("A").getNotes());
+        notes = "GIFT BAG #1";
+        updateTicket.setNotes(notes);
+        assertEquals(HTTP_OK, updateTicket("A", updateTicket));
+        tickets = getTickets();
+        assertEquals(notes, tickets.get("A").getNotes());
+        assertNotNull(tickets.get("B").getNotes());
+
+        // remove note
+        updateTicket.setNotes(""); // empty string to unset
+        assertEquals(HTTP_OK, updateTicket("B", updateTicket));
+        assertNull(getTickets().get("B").getNotes());
+    }
+
+    @Test
     public void voidTicket() throws IOException {
         addTickets("A");
         Ticket ticket = getTickets().get("A");
@@ -237,16 +284,12 @@ public class ApiTests extends CrossoffIntegrationTests {
         // don't do anything to it (unvoid it)
         Ticket updateTicket = new Ticket();
         updateTicket.setVoided(false);
-        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A")
-                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
-                .execute().returnResponse().getStatusLine().getStatusCode());
+        assertEquals(HTTP_OK, updateTicket("A", updateTicket));
         ticket = getTickets().get("A");
         assertNull(ticket.getVoided());
         // void it
         updateTicket.setVoided(true);
-        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A")
-                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
-                .execute().returnResponse().getStatusLine().getStatusCode());
+        assertEquals(HTTP_OK, updateTicket("A", updateTicket));
         ticket = getTickets().get("A");
         assertTrue(ticket.getVoided());
 
@@ -257,9 +300,7 @@ public class ApiTests extends CrossoffIntegrationTests {
 
         // unvoid it
         updateTicket.setVoided(false);
-        assertEquals(HTTP_OK, Request.Put(rootUrl + "tickets/A")
-                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
-                .execute().returnResponse().getStatusLine().getStatusCode());
+        assertEquals(HTTP_OK, updateTicket("A", updateTicket));
         ticket = getTickets().get("A");
         assertNull(ticket.getVoided());
 
@@ -305,6 +346,53 @@ public class ApiTests extends CrossoffIntegrationTests {
         assertNotNull(tickets.get("B").getScanned());
     }
 
+    @Test
+    public void longTicketCode() throws IOException {
+        String str64 = Strings.repeat("A",64);
+        String str65 = Strings.repeat("A",65);
+        String str256 = Strings.repeat("A",256);
+
+        // ticket code max 64 chars
+        assertEquals(HTTP_BAD_REQUEST, addTickets(Strings.repeat("X", 1024 * 1024)));
+        assertEquals(HTTP_BAD_REQUEST, addTickets(str256));
+        assertEquals(HTTP_BAD_REQUEST, addTickets(str65));
+        assertEquals(HTTP_OK, addTickets(str64));
+        assertTrue(scan(str64).isAccepted());
+        Map<String, Ticket> tickets = getTickets();
+        assertNotNull(tickets.get(str64).getScanned());
+
+        assertFalse(scan(str256).isAccepted()); // long ticket code is normal unaccepted scan
+        assertFalse(scan(str65).isAccepted());
+    }
+
+    @Test
+    public void invalidTicketCode() throws IOException {
+        assertEquals(HTTP_BAD_REQUEST, addTickets("NO SPACES"));
+        assertEquals(HTTP_BAD_REQUEST, addTickets("nolowercase"));
+        assertEquals(HTTP_BAD_REQUEST, addTickets("LIMITEDSPECIAL!"));
+        assertEquals(HTTP_BAD_REQUEST, addTickets(""));
+        assertEquals(HTTP_BAD_REQUEST, addTickets("[this one, definitely bad]"));
+    }
+
+    @Test
+    public void invalidTicketholder() throws IOException {
+        assertEquals(HTTP_BAD_REQUEST, addTicket(new Ticket("A", "GA", "", Ticket.TicketType.MOBILE)));
+        assertEquals(HTTP_BAD_REQUEST, addTicket(new Ticket("B", "GA", Strings.repeat("X", 256), Ticket.TicketType.MOBILE)));
+        assertEquals(HTTP_OK, addTicket(new Ticket("A", "GA", Strings.repeat("X", 255), Ticket.TicketType.MOBILE)));
+
+        // update
+        Ticket updateTicket = new Ticket().setTicketholder(Strings.repeat("X",256));
+        assertEquals(HTTP_BAD_REQUEST, updateTicket("A", updateTicket));
+        updateTicket.setTicketholder("Joe");
+        assertEquals(HTTP_OK, updateTicket("A", updateTicket));
+    }
+
+    @Test
+    public void invalidSortColumn() throws IOException {
+        assertEquals(HTTP_BAD_REQUEST, Request.Get(rootUrl + "/tickets/?sort=fhgwgads")
+                .execute().returnResponse().getStatusLine().getStatusCode());
+    }
+
     private void ascendingCode(List<Ticket> tickets, boolean isAscending) {
         boolean ascending = true;
         String lastCode = "";
@@ -343,7 +431,17 @@ public class ApiTests extends CrossoffIntegrationTests {
         List<Ticket> tickets = Lists.newArrayList(codes).stream()
                 .map(code -> new Ticket(code, "GENERIC TICKET " + code, "Ticket Holder", Ticket.TicketType.UNSPECIFIED))
                 .collect(Collectors.toList());
+        return addTickets(tickets);
+    }
+
+    private int addTickets(List<Ticket> tickets) throws IOException {
         String postTickets = JACKSON.writeValueAsString(tickets);
+        return Request.Post(rootUrl + "tickets/").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
+                .returnResponse().getStatusLine().getStatusCode();
+    }
+
+    private int addTicket(Ticket ticket) throws IOException {
+        String postTickets = JACKSON.writeValueAsString(ImmutableList.of(ticket));
         return Request.Post(rootUrl + "tickets/").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
                 .returnResponse().getStatusLine().getStatusCode();
     }
@@ -354,5 +452,11 @@ public class ApiTests extends CrossoffIntegrationTests {
 
     private ScanResult scan(String code) throws IOException {
         return scan(code, false);
+    }
+
+    private int updateTicket(String code, Ticket updateTicket) throws IOException {
+        return Request.Put(rootUrl + "tickets/" + code)
+                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .execute().returnResponse().getStatusLine().getStatusCode();
     }
 }

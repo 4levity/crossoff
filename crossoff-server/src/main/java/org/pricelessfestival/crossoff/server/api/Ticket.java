@@ -3,7 +3,9 @@ package org.pricelessfestival.crossoff.server.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.base.Strings;
 import lombok.*;
+import lombok.experimental.Accessors;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.envers.Audited;
 
@@ -18,10 +20,13 @@ import java.util.regex.Pattern;
 @Audited
 @Table(name = "tickets")
 @NoArgsConstructor
+@Accessors(chain = true)
 @ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Ticket {
+
+    private static final int DEFAULT_ENTITY_STRING_LENGTH = 255;
 
     @Id
     @GeneratedValue
@@ -31,10 +36,10 @@ public class Ticket {
     @Setter(AccessLevel.PRIVATE)
     private Long id;
 
-    @NaturalId
+    @NaturalId(mutable = false)
     @Column(name = "code", nullable = false, unique = true)
     @Getter
-    @Setter
+    @Setter(AccessLevel.PRIVATE)
     private String code; // value of the barcode printed on the ticket and scanned
 
     @Column(name = "description", nullable = false)
@@ -60,25 +65,47 @@ public class Ticket {
     @Column(name = "manualscan")
     @Getter
     @Setter
-    private Boolean manualScan; // true if ticket was reported marked as scanned "manually" (rather than by barcode)
+    private Boolean manualScan; // true if ticket was reported marked as scanned "manually" (rather than by barcode), null otherwise
 
     @Column(name = "voided")
     @Getter
     @Setter
-    private Boolean voided; // true if ticket was voided (e.g. refund issued, ticket canceled)
+    private Boolean voided; // true if ticket was voided (e.g. refund issued, ticket canceled), null otherwise
 
-    public Ticket(String code, String description, String ticketholder, TicketType ticketType) {
+    @Column(name = "notes")
+    @Getter
+    @Setter
+    private String notes; // door notes for this ticket, or null
+
+    public Ticket(String code, String description, String ticketholder, TicketType ticketType, String notes) {
         this.code = code;
         this.description = description;
         this.ticketholder = ticketholder;
         this.ticketType = ticketType;
+        this.notes = notes;
     }
 
-    // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
-    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
+    public Ticket(String code, String description, String ticketholder, TicketType ticketType) {
+        this(code, description, ticketholder, ticketType, null);
+    }
+
+    // acceptable barcodes: 1-64 chars long, subset of Code 39 printable characters (no / + or [space])
+    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]{1,64}$");
 
     public static boolean validTicketCode(String code) {
         return code != null && VALID_TICKET_CODE.matcher(code).matches();
+    }
+
+    public static boolean validDescription(String description) {
+        return !Strings.isNullOrEmpty(description) && description.length() <= DEFAULT_ENTITY_STRING_LENGTH;
+    }
+
+    public static boolean validTicketholder(String description) {
+        return description == null || (!description.isEmpty() && description.length() <= DEFAULT_ENTITY_STRING_LENGTH);
+    }
+
+    public static boolean validNotes(String notes) {
+        return notes == null || (!notes.isEmpty() && notes.length() <= DEFAULT_ENTITY_STRING_LENGTH);
     }
 
     public enum TicketType {

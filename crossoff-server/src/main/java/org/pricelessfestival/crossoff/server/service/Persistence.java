@@ -10,7 +10,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import java.sql.SQLException;
-import java.util.function.Function;
 
 /**
  * Created by ivan on 4/26/18.
@@ -38,7 +37,7 @@ public class Persistence {
         }
     }
 
-    public static <T> T exec(Function<Session, T> operation) {
+    public static <T> T exec(org.pricelessfestival.crossoff.server.service.Transaction<T> operation) {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
         T result = null;
