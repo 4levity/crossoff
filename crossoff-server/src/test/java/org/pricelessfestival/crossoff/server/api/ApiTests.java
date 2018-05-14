@@ -1,6 +1,5 @@
 package org.pricelessfestival.crossoff.server.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;

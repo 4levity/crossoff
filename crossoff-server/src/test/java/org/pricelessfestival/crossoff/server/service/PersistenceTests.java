@@ -4,9 +4,7 @@ import org.junit.Test;
 import org.pricelessfestival.crossoff.server.CrossoffIntegrationTests;
 import org.pricelessfestival.crossoff.server.api.Ticket;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by ivan on 5/12/18.
