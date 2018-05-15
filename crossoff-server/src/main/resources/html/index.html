@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html><head><title>crossoff</title>
+    <link rel="stylesheet" type="text/css" href="crossoff.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Language" content="en_US" />
     <script>
@@ -17,7 +18,7 @@
     }
     function showTickets() {
         var searchTermUppercase = document.getElementById('searchbox').value.toUpperCase();
-        var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
+        var ticketList = "<table class=ticketlist><thead><tr>"
                 + "<td onclick=loadBy('code')>Code&nbsp;</td>"
                 + "<td onclick=loadBy('ticketholder')>Ticketholder&nbsp;</td>"
                 + "<td onclick=loadBy('description')>Description&nbsp;</td>"
@@ -32,17 +33,17 @@
             if (searchTermUppercase == ''
                     || ticket.code.indexOf(searchTermUppercase) > -1
                     || ticket.ticketholder.toUpperCase().indexOf(searchTermUppercase) > -1) {
-                var tdStyle = 'border-bottom:1px solid black';
+                var tdClass = "ticket";
                 if (ticket.scanned) {
-                    tdStyle += ";text-decoration:line-through";
+                    tdClass += " crossedoff";
                 }
                 if (ticket.voided) {
-                    tdStyle += ";color:red;font-weight:bold"
+                    tdClass += " voided";
                 }
                 ticketList += "<tr onclick=document.location='edit.html?code=" + ticket.code + "'>"
-                        + "<td style='font-family:monospace;" + tdStyle + "'>" + ticket.code + "&nbsp;</td>"
-                        + "<td style='" + tdStyle + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
-                        + "<td style='" + tdStyle + "'>" + (ticket.voided ? "VOID" : ticket.description) +  "&nbsp;</td>"
+                        + "<td class='barcode " + tdClass + "'>" + ticket.code + "&nbsp;</td>"
+                        + "<td class='" + tdClass + "'>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
+                        + "<td class='" + tdClass + "'>" + (ticket.voided ? "VOID" : ticket.description) +  "&nbsp;</td>"
                         + "</tr>";
             }
         }
@@ -51,7 +52,7 @@
         document.getElementById("tickets").innerHTML = ticketList;
     }
 </script></head>
-<body style="background-color:white" onload=loadBy("ticketholder")>
+<body onload=loadBy("ticketholder")>
 <h3><a href="/">Crossoff</a> - Tickets</h3>
 <div id=summary></div>
 <div id=search>Search: <input type=textbox size=20 id=searchbox oninput="showTickets()"/>

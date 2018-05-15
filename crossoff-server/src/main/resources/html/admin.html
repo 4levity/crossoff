@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html><head><title>crossoff</title>
+    <link rel="stylesheet" type="text/css" href="crossoff.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Language" content="en_US" />
     <script>
@@ -119,7 +120,7 @@
     }
     function showSelectedTickets() {
         selectTickets();
-        var ticketList = "<table style='border-collapse:collapse'><thead style='background: lightgray'><tr>"
+        var ticketList = "<table class=ticketlist><thead><tr>"
                 + "<td>Barcode&nbsp;</td>"
                 + "<td>Ticket Type&nbsp;</td>"
                 + "<td>Ticketholder&nbsp;</td>"
@@ -128,10 +129,10 @@
         for (var row = 0; row < selectedTickets.length; row++) {
             var ticket = selectedTickets[row];
             ticketList += "<tr>"
-                    + "<td style='font-family:monospace;border-bottom:1px solid black'>" + ticket.code + "&nbsp;</td>"
-                    + "<td style='border-bottom:1px solid black'>" + ticket.ticketType + "&nbsp;</td>"
-                    + "<td style='border-bottom:1px solid black'>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
-                    + "<td style='border-bottom:1px solid black'>" + ticket.description +  "&nbsp;</td>"
+                    + "<td class=barcode>" + ticket.code + "&nbsp;</td>"
+                    + "<td>" + ticket.ticketType + "&nbsp;</td>"
+                    + "<td>" + (ticket.ticketholder || '')  + "&nbsp;</td>"
+                    + "<td>" + ticket.description +  "&nbsp;</td>"
                     + "</tr>";
         }
         ticketList += "</tbody></table>";
@@ -160,9 +161,9 @@
         }
     }
 </script></head>
-<body style="background-color:white">
+<body>
 <h3><a href="/">Crossoff</a> - Admin</h3>
-<div style='border: 1px solid black'>
+<div class=boxed>
     BPT Ticket Loader: Download "Complete List" downloadreport.xls from BPT, and
     <input id=fileselectbutton type=file onchange='fileSelected(event)'/>
     <div id=summary>(summary will appear here)</div>

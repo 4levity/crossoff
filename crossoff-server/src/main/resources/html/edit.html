@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html><head><title>crossoff</title>
+    <link rel="stylesheet" type="text/css" href="crossoff.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Language" content="en_US" />
     <script>
@@ -106,7 +107,7 @@
         }
         var barcodeHtml;
         if (ticket.voided) {
-            barcodeHtml = "<span style='color:red;font-weight:bold'>VOID " + ticket.code + "</span>";
+            barcodeHtml = "<span class=voided>VOID " + ticket.code + "</span>";
         } else {
             barcodeHtml = ticket.code;
         }
@@ -142,16 +143,15 @@
         document.getElementById("ticketholder").disabled = disableValue;
         document.getElementById("tickettype").disabled = disableValue;
         document.getElementById("description").disabled = disableValue;
-        //document.getElementById("savebutton").disabled = disableValue;
         document.getElementById("deletebutton").disabled = disableValue || !ticket || ticket.scanned; // can't delete if scanned
         document.getElementById("voidbutton").disabled = disableValue || !ticket || ticket.scanned || ticket.voided; // scanned or void
         document.getElementById("unvoidbutton").disabled = disableValue || !ticket || !ticket.voided; // void
     }
 </script></head>
-<body style="background-color:white" onload=loadTicket()>
+<body onload=loadTicket()>
 <h3><a href="/">Crossoff</a> - Edit Ticket</h3>
-<table style='width:100%'>
-    <tr><td>Code:</td><td style='font-family:monospace'><output id=code></output></td></tr>
+<table>
+    <tr><td>Code:</td><td class=barcode><output id=code></output></td></tr>
     <tr><td>&nbsp;</td><td><input type=checkbox id=inputlock onclick="lockUnlock()"/><label for=inputlock>Locked</label></td></tr>
     <tr><td>Ticketholder:</td><td><input type=textbox size=40 maxlength=255 id="ticketholder"/></td></tr>
     <tr><td>Ticket Type:</td><td><select id=tickettype>
@@ -170,6 +170,6 @@
             <button type=button id=voidbutton onclick=voidTicket(true)>Void</button>&nbsp;
             <button type=button id=unvoidbutton onclick=voidTicket(false)>Unvoid</button></td></tr>
     <tr><td>Scanned:</td><td><output id=scanned></output></td></tr>
-    <tr><td colspan=2><output style='font-weight:bold' id=scanresult></output></td></tr>
+    <tr><td colspan=2><output class=servertext id=scanresult></output></td></tr>
 </table>
 </body></html>
