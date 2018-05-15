@@ -6,6 +6,10 @@ Crossoff was developed to provide a free system to validate print-at-home, mobil
 barcode tickets at an event, without needing internet access. It consists of a server and an Android app 
 that uses a phone or tablet camera to scan barcodes. 
 
+Upon scanning a ticket, the user of the app is informed whether the scan was accepted, or if the ticket
+was already scanned or voided etc. Also, "door notes" can be associated with a particular ticket and those
+will be displayed upon successful scan of that ticket.
+
 It's also possible to use Crossoff to check names/numbers off a central list by hand, without using the 
 Android app at all, using just the basic HTML5 user interface provided by the server. But it's not 
 really optimized for this use yet.
@@ -87,7 +91,6 @@ provided by WPA2, and by not connecting anything else to your ticket validation 
   * Android KitKat or later
   * Connected to the WiFi
   * Running the Crossoff app
-  * Optionally, with a bookmark to **http://10.0.2.2** to browse ticket list, do manual check-in, etc
 
 ## Risks ##
 
