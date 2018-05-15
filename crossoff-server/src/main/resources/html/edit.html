@@ -28,20 +28,25 @@
         document.getElementById("scanresult").innerHTML = '';
         var request = new XMLHttpRequest();
         request.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                var result = JSON.parse(this.responseText);
-                if (result.code) {
-                    ticket = result;
-                    showTicket();
-                } else {
-                    if (result.message && result.ticket) {
-                        document.getElementById("scanresult").innerHTML = (result.accepted ? "SCAN ACCEPTED " : "DENIED ")
-                                + result.ticket.code + " / " + result.message;
+            if (this.readyState == 4) {
+                if (this.status == 200) {
+                    var result = JSON.parse(this.responseText);
+                    if (result.code) {
+                        ticket = result;
+                        showTicket();
+                    } else {
+                        if (result.message && result.ticket) {
+                            document.getElementById("scanresult").innerHTML =
+                                    (result.accepted ? "SCAN ACCEPTED: " : "SCAN DENIED: ") + result.message;
+                        }
+                        loadTicket();
                     }
+                } else if (this.status == 204) { // HTTP 204 no-content is response to DELETE
+                    window.location.href = "/";
+                } else {
+                    alert("An error occurred. Try again.");
                     loadTicket();
                 }
-            } else if (this.readyState == 4 && this.status == 204) { // HTTP 204 no-content is seen in response to DELETE
-                window.location.href = "/";
             }
         };
         var url = "/tickets/" + ticketCode();
@@ -145,7 +150,7 @@
 </script></head>
 <body style="background-color:white" onload=loadTicket()>
 <h3><a href="/">Crossoff</a> - Edit Ticket</h3>
-<table>
+<table style='width:100%'>
     <tr><td>Code:</td><td style='font-family:monospace'><output id=code></output></td></tr>
     <tr><td>&nbsp;</td><td><input type=checkbox id=inputlock onclick="lockUnlock()"/><label for=inputlock>Locked</label></td></tr>
     <tr><td>Ticketholder:</td><td><input type=textbox size=40 maxlength=255 id="ticketholder"/></td></tr>
@@ -164,7 +169,7 @@
         <td><button type=button id=deletebutton onclick=deleteTicket()>Delete</button>&nbsp;
             <button type=button id=voidbutton onclick=voidTicket(true)>Void</button>&nbsp;
             <button type=button id=unvoidbutton onclick=voidTicket(false)>Unvoid</button></td></tr>
-    <tr><td>Scanned:</td><td><output id=scanned></output><div style='font-weight:bold' id=scanresult></div></td></tr>
+    <tr><td>Scanned:</td><td><output id=scanned></output></td></tr>
+    <tr><td colspan=2><output style='font-weight:bold' id=scanresult></output></td></tr>
 </table>
-</ul>
 </body></html>
