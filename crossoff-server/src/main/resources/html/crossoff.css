@@ -1,0 +1,29 @@
+body {
+    background-color: white;
+    color: black;
+}
+table {
+    border-collapse: collapse;
+}
+thead {
+    background: lightgray;
+}
+table.ticketlist td {
+    border-bottom: 1px solid black;
+}
+.barcode {
+    font-family: monospace;
+}
+.crossedoff {
+    text-decoration: line-through;
+}
+.voided {
+    color: red;
+    font-weight: bold;
+}
+.servertext {
+    font-weight: bold;
+}
+.boxed {
+    border: 1px solid black;
+}
