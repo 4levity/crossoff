@@ -3,4 +3,6 @@
 /.idea
 /log
 /database
+/out
+/*.iml
 .DS_Store
