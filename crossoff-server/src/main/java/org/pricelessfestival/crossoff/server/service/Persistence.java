@@ -53,26 +53,31 @@ public class Persistence {
 
     private static void finish(boolean completed, Session session) {
         boolean rollback = !completed;
+        org.hibernate.Transaction transaction = null;
         try {
-            Transaction transaction = session.getTransaction();
+            transaction = session.getTransaction();
             if (transaction == null || !transaction.isActive()) {
-                log.error("finish() called with no active Transaction", new Exception());
+                throw new IllegalStateException("finish() called with no active Transaction");
             }
             if (rollback) {
                 log.warn("errors occurred during transaction, rolling back");
+                // rollback will occur in finally block
             } else {
                 try {
-                    session.getTransaction().commit();
+                    transaction.commit();
                 } catch (RuntimeException e) {
                     log.error("commit failed, switching to rollback", e);
                     rollback = true;
+                    throw e;
+                    // rollback will occur in finally block
                 }
             }
         } finally {
-            if (rollback) {
+            if (rollback && transaction != null && transaction.isActive()) {
                 try {
-                    session.getTransaction().rollback();
+                    transaction.rollback();
                 } catch (RuntimeException e) {
+                    // just log rollback failure. the original failure is being thrown through this finally block.
                     log.error("rollback failed", e);
                 }
             }

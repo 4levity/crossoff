@@ -79,14 +79,11 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
 
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
 
-        boolean autoFocus = true;
-        boolean useFlash = true;
-
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
         int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource(autoFocus, useFlash);
+            createCameraSource();
         } else {
             requestCameraPermission();
         }
@@ -121,7 +118,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
      * the constant.
      */
     @SuppressLint("InlinedApi")
-    private void createCameraSource(boolean autoFocus, boolean useFlash) {
+    private void createCameraSource() {
         Context context = getApplicationContext();
 
         // A barcode detector is created to track barcodes.  An associated multi-processor instance
@@ -169,15 +166,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
                 .setRequestedPreviewSize(metrics.widthPixels, metrics.heightPixels)
                 .setRequestedFps(24.0f);
 
-        // make sure that auto focus is an available option
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            builder = builder.setFocusMode(
-                    autoFocus ? Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE : null);
-        }
-
-        mCameraSource = builder
-                .setFlashMode(useFlash ? Camera.Parameters.FLASH_MODE_TORCH : null)
-                .build();
+        mCameraSource = builder.build();
     }
 
     // Restarts the camera
@@ -237,9 +226,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
         if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source");
             // we have permission, so create the camerasource
-            boolean autoFocus = true;
-            boolean useFlash = true;
-            createCameraSource(autoFocus, useFlash);
+            createCameraSource();
             return;
         }
 
@@ -253,7 +240,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Multitracker sample")
+        builder.setTitle("Crossoff")
                 .setMessage(R.string.no_camera_permission)
                 .setPositiveButton(R.string.ok, listener)
                 .show();
