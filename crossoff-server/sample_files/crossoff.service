@@ -1,0 +1,13 @@
+[Unit]
+Description=Crossoff Server
+[Service]
+User=user
+WorkingDirectory=/home/user/src/crossoff/crossoff-server
+ExecStart=/home/user/src/crossoff/crossoff-server/run.sh
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=multi-user.target
+
