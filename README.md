@@ -82,7 +82,7 @@ provided by WPA2, and by not connecting anything else to your ticket validation 
   * DHCP range 10.0.2.100 - 10.0.2.200 (or whatever, but not including 10.0.2.2)
   * WPA2-PSK (WPA2 Personal) encryption for the WiFi, using a secure+secret password
   * No Internet access (recommended)
-* One laptop or PC (also maybe a spare) configured as follows:
+* One laptop or PC or Raspberry Pi or similar (also maybe a spare) configured as follows:
   * Any operating system, Java 8 installed
   * Connected to the router (WiFi or Ethernet) and set up with **static ip address 10.0.2.2**
   * crossoff-server installed and running (optionally you could set it to start automatically on boot up)
@@ -91,6 +91,9 @@ provided by WPA2, and by not connecting anything else to your ticket validation 
   * Android KitKat or later
   * Connected to the WiFi
   * Running the Crossoff app
+
+Or ... you could use a Raspberry Pi Zero W with `hostapd` installed as both your server and
+the WiFi access point, and run the entire service from a small USB battery. 
 
 ## Risks ##
 

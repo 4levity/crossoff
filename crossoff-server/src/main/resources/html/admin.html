@@ -74,6 +74,54 @@
             }
         }
     }
+    function add1(ticket, k,v) {
+        v = v.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '').trim();
+        if (k == "description" && ticketDescriptions.indexOf(v) < 0) {
+            ticketDescriptions.push(v);
+        }
+        if (k == "code" && v == "*random*") {
+            var randos = new Uint32Array(3);
+            window.crypto.getRandomValues(randos);
+            v = (randos[0].toString(36) + randos[1].toString(36) + randos[2].toString(36)).substring(0,10).toUpperCase();
+        }
+        if (['code','description','ticketholder','ticketType','notes'].indexOf(k) >= 0) {
+            ticket[k] = v;
+        }
+    }
+    function add(names, values) {
+        ticket = {}
+        if (names.length != values.length) {
+            console.log("error, expected " + names.length + " columns but there were " + values.length);
+        } else {
+            for (var ix = 0; ix < names.length; ix++) {
+                add1(ticket, names[ix], values[ix]);
+            }
+            console.log("added ticket: " + JSON.stringify(ticket));
+            tickets.push(ticket);
+        }
+    }
+    function parseCsv(list) {
+        var lines = list.split('\n');
+        var ticketType = undefined;
+        var firstLine = true;
+        var columnNames = [];
+
+        console.log("trying to parse CSV tickets file, lines = " + lines.length);
+        for (var ix = 0; ix < lines.length; ix++) {
+            var line = lines[ix];
+            var cols = line.split('\t');
+            if (firstLine) {
+                for (var cix = 0; cix < cols.length; cix++) {
+                    columnNames[cix] = cols[cix];
+                }
+                firstLine = false;
+            } else if (cols.length >= 3) {
+                add(columnNames, cols);
+            } else {
+                console.log("unparsable line: " + line);
+            }
+        }
+    }
     function fileSelected(event) {
         document.getElementById("fileselectbutton").disabled = true;
         var selection = event.target;
@@ -84,7 +132,11 @@
             ticketDescriptions = [];
             document.getElementById('ticketSelector').innerHTML = '';
             document.getElementById('tickets').innerHTML = '';
-            parseBptList(text);
+            if (text.startsWith('Ticket Holders')) {
+                parseBptList(text);
+            } else {
+                parseCsv(text);
+            }
             if (ticketDescriptions.length > 0 && tickets.length > 0) {
                 document.getElementById('summary').innerHTML = "Loaded " + tickets.length + " tickets.";
                 showPreview();
@@ -164,7 +216,7 @@
 <body>
 <h3><a href="/">Crossoff</a> - Admin</h3>
 <div class=boxed>
-    BPT Ticket Loader: Download "Complete List" downloadreport.xls from BPT, and
+    Ticket Loader: Get TSV with column names or "Complete List" downloadreport.xls from BPT, and
     <input id=fileselectbutton type=file onchange='fileSelected(event)'/>
     <div id=summary>(summary will appear here)</div>
     <div id=ticketSelector></div>
