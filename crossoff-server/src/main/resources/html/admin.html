@@ -100,13 +100,13 @@
             tickets.push(ticket);
         }
     }
-    function parseCsv(list) {
+    function parseTsv(list) {
         var lines = list.split('\n');
         var ticketType = undefined;
         var firstLine = true;
         var columnNames = [];
 
-        console.log("trying to parse CSV tickets file, lines = " + lines.length);
+        console.log("trying to parse TSV tickets file, lines = " + lines.length);
         for (var ix = 0; ix < lines.length; ix++) {
             var line = lines[ix];
             var cols = line.split('\t');
@@ -122,8 +122,60 @@
             }
         }
     }
-    function fileSelected(event) {
-        document.getElementById("fileselectbutton").disabled = true;
+
+    function parseCsv(list) {
+        var lines = list.replace('\r','').split('\n');
+        var ticketType = 'PRINT_AT_HOME';
+        var codeCol = undefined;
+        var firstNameCol = undefined;
+        var lastNameCol = undefined;
+        var productCol = undefined;
+        var firstLine = true;
+        var columnNames = [];
+        var ticket = {};
+
+        console.log("trying to parse CSV tickets file, lines = " + lines.length);
+        for (var ix = 0; ix < lines.length; ix++) {
+            var line = lines[ix];
+            var cols = line.split(',');
+            if (firstLine) {
+                for (var cix = 0; cix < cols.length; cix++) {
+                    columnNames[cix] = cols[cix];
+                    if (cols[cix] === 'ticket_code') {
+                        codeCol = cix;
+                    } else if (cols[cix] === 'last_name') {
+                        lastNameCol = cix;
+                    } else if (cols[cix] === 'first_name') {
+                        firstNameCol = cix;
+                    } else if (cols[cix] === 'product') {
+                        productCol = cix;
+                    }
+                }
+                firstLine = false;
+                if (typeof(codeCol) === 'undefined' || typeof(lastNameCol) === 'undefined' || typeof(firstNameCol) === 'undefined' || typeof(productCol) ==='undefined') {
+                    console.log("missing ticket_code, last_name, first_name, or product column");
+                    console.log("columnNames:", columnNames);
+                }
+            } else if (cols.length >= 3) {
+                ticket = { 'code': cols[codeCol],
+                            'description': cols[productCol],
+                            'ticketType': ticketType,
+                            'ticketholder': cols[firstNameCol] + ' ' + cols[lastNameCol]
+                };
+                console.log("added ticket: " + JSON.stringify(ticket));
+                if (ticketDescriptions.indexOf(cols[productCol]) < 0) {
+                    ticketDescriptions.push(cols[productCol]);
+                   }
+                tickets.push(ticket);
+            } else if (cols.length > 0) {
+                console.log("unparsable line: " + line);
+            }
+        }
+    }
+
+    function fileSelected(event, filetype) {
+        document.getElementById("bptselectbutton").disabled = true;
+        document.getElementById("spselectbutton").disabled = true;
         var selection = event.target;
         var reader = new FileReader();
         reader.onload = function() {
@@ -132,10 +184,12 @@
             ticketDescriptions = [];
             document.getElementById('ticketSelector').innerHTML = '';
             document.getElementById('tickets').innerHTML = '';
-            if (text.startsWith('Ticket Holders')) {
+            if (filetype === 'SP') {
+                parseCsv(text);
+            } else if (text.startsWith('Ticket Holders')) {
                 parseBptList(text);
             } else {
-                parseCsv(text);
+                parseTsv(text);
             }
             if (ticketDescriptions.length > 0 && tickets.length > 0) {
                 document.getElementById('summary').innerHTML = "Loaded " + tickets.length + " tickets.";
@@ -216,8 +270,23 @@
 <body>
 <h3><a href="/">Crossoff</a> - Admin</h3>
 <div class=boxed>
-    Ticket Loader: Get TSV with column names or "Complete List" downloadreport.xls from BPT, and
-    <input id=fileselectbutton type=file onchange='fileSelected(event)'/>
+    Ticket Loader:
+    <UL>
+       <LI style="margin-bottom: 0.5em;">
+            <label>Upload Secret Party CSV
+                <input id=spselectbutton type=file onchange='fileSelected(event, "SP")' accept='.csv' />
+            </label><br />
+            <span style="font-size: smaller;">
+                Format: has column headers and must include ticket_code, first_name, last_name, and product columns<br />
+                column order is not important and may include other columns, which will be ignored.
+            </span>
+        </LI>
+        <LI>
+            <label>Upload BPT TSV with column names or "Complete List" downloaded report
+                <input id=bptselectbutton type=file onchange='fileSelected(event, "BPT")' />
+            </label>
+        </LI>
+    </UL>
     <div id=summary>(summary will appear here)</div>
     <div id=ticketSelector></div>
     <div id=tickets></div>
