@@ -23,12 +23,16 @@ For user interface, including manual scanning and editing, point your web browse
 
     http://localhost:8080
 
-To add tickets from a Brown Paper Tickets list, browse to admin screen and follow instructions
+To add tickets from a Secret Party Guest List export CSV or Brown Paper Tickets list, browse to admin screen and follow instructions
 to use the "wizard".
-There is an example file at **sample_files/bpt_complete_list_example.xls**. Note that it is a 
+
+There is an example BPT file at **sample_files/bpt_complete_list_example.xls**. Note that it is a 
 *tab-separated* spreadsheet just like the real thing from BPT; be careful if you edit it.
 
-Or, to add tickets manually without using the BPT import wizard (using Postman, curl etc):
+The Secret Party CSV importer can be used for any CSV list of tickets as long as there is a header row and it includes columns named
+ticket_code, first_name, last_name, and product. The columns can be in any order and there can be extra columns as well.
+
+Or, to add tickets manually without using either the BPT or SP import wizards (using Postman, curl etc):
 
     POST http://localhost:8080/tickets
 
