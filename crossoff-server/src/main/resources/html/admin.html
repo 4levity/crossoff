@@ -123,6 +123,34 @@
         }
     }
 
+    // Single-line CSV parser (won't handle CSV's with \r\n in a column)
+    // The AngularJS CSV exporter currently being used by Secret Party doesn't put quotes around
+    // a field containing quotes though RFC 4180 says that one should, so we parse
+    // both ways to future proof and let this be uses for other CSVs
+    function csvToArray(textLine) {
+        if (textLine === '') return [];
+        const ret = [''];
+        let i = 0, prevChar = '', inQuote = false, c;
+        for (c of textLine) {
+            if (c === '"') {
+                if (prevChar === '"') {
+                    ret[i] += '"'; // quote quote becomes quote
+                    c = '""'; // but quote quote quote shouldn't become quote quote
+                } else if (prevChar === '') {
+                    c = ',"'; // make sure ,"", doesn't turn into a quote, but ,"""", should
+                }
+                inQuote = !inQuote;
+            } else if (!inQuote && c === ',') {
+                ret[++i] = '';
+                c = '';
+            } else {
+                ret[i] += c;
+            }
+            prevChar = c;
+        }
+        return ret;
+    }
+
     function parseCsv(list) {
         var lines = list.replace('\r','').split('\n');
         var ticketType = 'PRINT_AT_HOME';
@@ -137,7 +165,7 @@
         console.log("trying to parse CSV tickets file, lines = " + lines.length);
         for (var ix = 0; ix < lines.length; ix++) {
             var line = lines[ix];
-            var cols = line.split(',');
+            var cols = csvToArray(line);
             if (firstLine) {
                 for (var cix = 0; cix < cols.length; cix++) {
                     columnNames[cix] = cols[cix];
@@ -168,7 +196,7 @@
                    }
                 tickets.push(ticket);
             } else if (cols.length > 0) {
-                console.log("unparsable line: " + line);
+                console.log("unparsable line: ", line);
             }
         }
     }
