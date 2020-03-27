@@ -14,9 +14,9 @@ It's also possible to use Crossoff to check names/numbers off a central list by 
 Android app at all, using just the basic HTML5 user interface provided by the server. But it's not 
 really optimized for this use yet.
 
-The UI includes support for easily importing ticket data and barcodes from Brown Paper Tickets, or you can 
-generate your own ticket list and use that instead. NOTE: Brown Paper Tickets may change their data format
-at any time and then this feature would stop working.
+The UI includes support for easily importing ticket data and barcodes from Secret Party or Brown Paper
+Tickets, or you can generate your own ticket list and use that instead. 
+NOTE: Brown Paper Tickets may change their data format at any time and that feature would stop working.
 
 ## Project Details ##
 
@@ -36,10 +36,10 @@ demand is high, so she needs to make sure that every ticket presented at the doo
 everyone off a list is too slow. She knows how to generate random barcodes and email them to her 
 ticketholders, and she needs a _free_ system that lets her have multiple barcode scanners running at once.
 
-Bob (not a programmer) is selling tickets to his event using Brown Paper Tickets. He wants to allow electronic 
-ticketing so that users can print their ticket at home and send tickets to other people electronically. However, 
-he cannot use the free Brown Paper Tickets app, because there is no reliable Internet service available at the
-location where tickets will be scanned.
+Bob (not a programmer) is selling tickets to his event using Secret Party. He wants to allow electronic 
+ticketing so that users can print their ticket at home and send tickets to other people electronically. Or,
+maybe he is using Brown Paper Tickets but cannot use the free Brown Paper Tickets app, because there is no 
+reliable Internet service available at the location where tickets will be scanned.
 
 In both of these cases, Crossoff might be a usable solution, and they could set up their hardware the 
 same way (see Setup section below).
@@ -49,16 +49,16 @@ example, start the server and browse to _http://localhost:8080/tickets/example_.
 a few fields - the barcode for each attendee, their name (optional) and a ticket description and type.
 Then she'd start up crossoff-server and use curl or Postman to load the tickets via the simple API.
 
-Since Bob is using Brown Paper Tickets to sell his tickets and generate barcodes, he doesn't have to deal 
-with JSON and APIs. He just logs into the Brown Paper Tickets website right before the event, and downloads 
-the "Complete List" for the event. The UI on crossoff-server allows him to quickly import this file and 
+Since Bob is using Secret Party to sell his tickets and generate barcodes, he doesn't have to deal 
+with JSON and APIs. He just logs into the Secret Party website right before the event, and downloads 
+the ticket list for the event. The UI on crossoff-server allows him to quickly import this file and 
 he is ready to start scanning.
 
 ### Last Minute Sales ###
 
 If Alice wants to allow last minute ticket sales, she could use the crossoff-server API to add more 
 tickets as they are sold. Bob could theoretically do that too, but to keep things simple, he might want 
-to stop new sales on Brown Paper Tickets, then download his final list of attendees and load them into 
+to stop new sales on Secret Party, then download his final list of attendees and load them into 
 the database.
 
 ## Setup for Testing and Evaluation ##
