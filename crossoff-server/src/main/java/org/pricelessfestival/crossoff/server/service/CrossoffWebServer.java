@@ -11,9 +11,9 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.pricelessfestival.crossoff.server.api.TicketsResource;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.util.EnumSet;
@@ -45,9 +45,7 @@ public class CrossoffWebServer {
         servletHandler.addFilter(CrossoffWebServer.LogFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         ServletHolder jerseyServlet = servletHandler.addServlet(ServletContainer.class, "/*");
         jerseyServlet.setInitOrder(0);
-        // use Jackson's JAX-RS JSON support (instead of Jersey's own), and our own provider to inject ObjectMapper
-        jerseyServlet.setInitParameter("jersey.config.server.provider.packages",
-                "com.fasterxml.jackson.jaxrs.json," + GlobalObjectMapper.class.getPackage().getName());
+
         // register our one Jersey resource class
         servletHandler.setContextPath("/tickets");
         jerseyServlet.setInitParameter("jersey.config.server.provider.classnames", TicketsResource.class.getCanonicalName());

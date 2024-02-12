@@ -4,9 +4,9 @@ import com.google.common.collect.Lists;
 import lombok.extern.log4j.Log4j2;
 import org.pricelessfestival.crossoff.server.service.Persistence;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 /**
