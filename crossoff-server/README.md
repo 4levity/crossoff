@@ -1,7 +1,7 @@
 # crossoff-server LAN web app #
 
 crossoff-server is a self-contained LAN web app to manage a ticket database. Requires
-Java 8.
+Java. Originally developed for Java 8. Currently developing with OpenJDK 21.
 
 crossoff-server looks for its database in **./database/** and creates if it does not exist. 
 It writes logs to console and to **./log/crossoff.log** .
@@ -11,10 +11,10 @@ be used on a private LAN, secured with WPA2. Only approved users would have acce
 to the network. Note that with access to the network, anyone can add or delete tickets,
 mark them scanned, change them, etc.
 
-To build + test + make self contained jar + run server (from crossoff-server folder):
+To build + test + run server locally (from crossoff-server folder):
 
     ./gradlew build
-    java -jar build/libs/crossoff-server-1.0.jar 
+    ./gradlew run
 
 If the Crossoff android app is configured correctly, it will be able to contact the
 server in order to scan tickets.
@@ -39,3 +39,7 @@ Or, to add tickets manually without using either the BPT or SP import wizards (u
 For an example of the POST body for above:
 
     GET http://localhost:8080/tickets/example
+
+To build a distribution TAR in `build/distributions` in order to install the server on another device:
+
+    ./gradlew distTar

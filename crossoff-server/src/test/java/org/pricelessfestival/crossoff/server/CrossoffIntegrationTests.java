@@ -6,7 +6,7 @@ import org.junit.Before;
 import org.pricelessfestival.crossoff.server.service.CrossoffWebServer;
 import org.pricelessfestival.crossoff.server.service.Persistence;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Created by ivan on 5/6/18.

@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'application'
 }
 repositories {
     mavenCentral()
@@ -7,26 +8,15 @@ repositories {
 
 group 'org.pricelessfestival.crossoff'
 version '1.2'
-
-jar {
-    manifest {
-        attributes 'Main-Class': 'org.pricelessfestival.crossoff.server.Main'
-    }
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+mainClassName = 'org.pricelessfestival.crossoff.server.Main'
 
 ext {
-    lombokVersion = '1.16.20'
-    log4j2version = '2.11.0'
-    jacksonVersion = '2.9.5'
-    hibernateVersion = '5.2.16.Final'
-    jettyVersion = '9.4.9.v20180320'
-    jerseyVersion = '2.27'
+    lombokVersion = '1.18.30'
+    log4j2version = '2.22.1'
+    hibernateVersion = '6.4.4.Final'
+    jacksonVersion = '2.16.1'
+    jettyVersion = '11.0.20'
+    jerseyVersion = '3.1.5'
 }
 
 dependencies {
@@ -34,32 +24,32 @@ dependencies {
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
     compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
 
-    compile group: 'com.google.guava', name: 'guava', version: '24.1-jre'
+    implementation group: 'com.google.guava', name: 'guava', version: '33.0.0-jre'
 
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4j2version
-    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: log4j2version
-    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: jacksonVersion
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
-    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: jacksonVersion
-    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-jaxb-annotations', version: jacksonVersion
-    compile group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: jacksonVersion
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4j2version
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: log4j2version
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.12'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: jacksonVersion
 
-    compile group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
-    compile group: 'org.hibernate', name: 'hibernate-c3p0', version: hibernateVersion
-    compile group: 'org.hibernate', name: 'hibernate-envers', version: hibernateVersion
-    compile group: 'com.h2database', name: 'h2', version: '1.4.197'
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    implementation group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
+    implementation group: 'org.hibernate', name: 'hibernate-c3p0', version: hibernateVersion
+    implementation group: 'org.hibernate', name: 'hibernate-envers', version: hibernateVersion
+    implementation group: 'com.h2database', name: 'h2', version: '2.2.224'
 
-    compile group: 'org.eclipse.jetty', name: 'jetty-server', version: jettyVersion
-    compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: jettyVersion
-    compile group: 'org.eclipse.jetty', name: 'jetty-continuation', version: jettyVersion
+    implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: jettyVersion
+    implementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: jettyVersion
 
-    compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: jerseyVersion
-    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet-core', version: jerseyVersion
-    compile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: jerseyVersion
+    implementation group: 'org.glassfish.jersey.core', name: 'jersey-server', version: jerseyVersion
+    implementation group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet-core', version: jerseyVersion
+    implementation group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: jerseyVersion
+    implementation group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: jerseyVersion
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: jacksonVersion
+    implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.1'
 
     testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
     testCompileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.5'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.14'
 }

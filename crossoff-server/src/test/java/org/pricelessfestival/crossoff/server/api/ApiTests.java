@@ -23,7 +23,6 @@ import static org.pricelessfestival.crossoff.server.service.GlobalObjectMapper.J
 /**
  * Created by ivan on 4/26/18.
  */
-@SuppressWarnings("unchecked")
 @Log4j2
 public class ApiTests extends CrossoffIntegrationTests {
 

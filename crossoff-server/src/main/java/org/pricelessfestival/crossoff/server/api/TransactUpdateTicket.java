@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.Session;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 
 /**
  * Created by ivan on 5/12/18.
@@ -65,7 +65,7 @@ public class TransactUpdateTicket extends CrossoffTransaction<Ticket> {
         } else if (updateTicket.getNotes() != null
                 && (ticket.getNotes() == null || !updateTicket.getNotes().equals(ticket.getNotes()))) {
             // set or change notes
-            validNotes(ticket);
+            validNotes(updateTicket);
             ticket.setNotes(updateTicket.getNotes());
             modified = true;
         }
