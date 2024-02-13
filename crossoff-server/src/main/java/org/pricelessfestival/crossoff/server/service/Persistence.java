@@ -54,6 +54,7 @@ public class Persistence {
     private static void finish(boolean completed, Session session) {
         boolean rollback = !completed;
         org.hibernate.Transaction transaction = null;
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             transaction = session.getTransaction();
             if (transaction == null || !transaction.isActive()) {

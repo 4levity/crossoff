@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.util.EnumSet;
+import java.util.Objects;
 
 /**
  * Created by ivan on 4/26/18.
@@ -24,7 +25,7 @@ import java.util.EnumSet;
 @Log4j2
 public class CrossoffWebServer {
 
-    private int port;
+    private final int port;
     private Server server;
 
     public CrossoffWebServer(int port) {
@@ -32,9 +33,9 @@ public class CrossoffWebServer {
         this.server = null;
     }
 
-    public CrossoffWebServer start() throws Exception {
+    public void start() throws Exception {
         // static html
-        URI resourceUri = CrossoffWebServer.class.getClassLoader().getResource("html/").toURI();
+        URI resourceUri = Objects.requireNonNull(CrossoffWebServer.class.getClassLoader().getResource("html/")).toURI();
         ServletContextHandler htmlHandler = new ServletContextHandler();
         htmlHandler.setBaseResource(Resource.newResource(resourceUri));
         ServletHolder htmlHolder = new ServletHolder("default", DefaultServlet.class);
@@ -57,7 +58,6 @@ public class CrossoffWebServer {
         server.setHandler(handlers);
         server.start();
         log.info("Crossoff server UI and API online at http://localhost:{}/ + listening on all interfaces", port);
-        return this;
     }
 
     public static class LogFilter implements Filter {
@@ -72,16 +72,14 @@ public class CrossoffWebServer {
             try {
                 chain.doFilter(request, response);
             } finally {
-                if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-                    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-                    HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+                if (request instanceof HttpServletRequest req && response instanceof HttpServletResponse res) {
                     log.info("{} {} {} : HTTP {}",
-                            httpServletRequest.getRemoteAddr(),
-                            httpServletRequest.getMethod(),
-                            httpServletRequest.getContextPath()
-                                    + httpServletRequest.getPathInfo()
-                                    + (httpServletRequest.getQueryString() == null ? "" : "?" + httpServletRequest.getQueryString()),
-                            httpServletResponse.getStatus());
+                            req.getRemoteAddr(),
+                            req.getMethod(),
+                            req.getContextPath()
+                                    + req.getPathInfo()
+                                    + (req.getQueryString() == null ? "" : "?" + req.getQueryString()),
+                            res.getStatus());
                 }
             }
         }

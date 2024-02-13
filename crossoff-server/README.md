@@ -39,7 +39,5 @@ Or, to add tickets manually without using either the BPT or SP import wizards (u
 For an example of the POST body for above:
 
     GET http://localhost:8080/tickets/example
-
-To build a distribution TAR in `build/distributions` in order to install the server on another device:
-
-    ./gradlew distTar
+ 
+To install the server on another device, use the tar or zip file in `build/distributions`.

@@ -19,7 +19,7 @@ public class PersistenceTests extends CrossoffIntegrationTests {
         // make a change
         Persistence.exec(session -> {
             Ticket ticket = new Ticket("A", "desc", null, Ticket.TicketType.MOBILE);
-            session.saveOrUpdate(ticket);
+            session.merge(ticket);
             return null;
         });
         // make a change but then roll back
@@ -27,7 +27,7 @@ public class PersistenceTests extends CrossoffIntegrationTests {
         try {
             Persistence.exec(session -> {
                 Ticket ticket = new Ticket("B", "desc", null, Ticket.TicketType.MOBILE);
-                session.saveOrUpdate(ticket);
+                session.merge(ticket);
                 throw new TestException();
             });
         } catch (TestException e) {
