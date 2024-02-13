@@ -37,7 +37,7 @@ public class Scanner {
                 try {
                     String scanResult;
                     if (body == null) {
-                        scanResult = "ERROR: Communication with server failed. Check network and try again.";
+                        scanResult = "ERROR: Communication with server failed. Check network and try again. ("+statusCode+") " + url;
                     } else if (statusCode == 200) {
                         scanResult = parseScanResult(body);
                     } else {
