@@ -2,8 +2,8 @@
 Description=Crossoff Server
 [Service]
 User=user
-WorkingDirectory=/home/user/src/crossoff/crossoff-server
-ExecStart=/home/user/src/crossoff/crossoff-server/run.sh
+WorkingDirectory=/home/user/crossoff-server
+ExecStart=/home/user/crossoff-server/bin/crossoff-server
 SuccessExitStatus=143
 TimeoutStopSec=10
 Restart=on-failure

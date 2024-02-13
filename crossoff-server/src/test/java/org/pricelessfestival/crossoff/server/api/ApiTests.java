@@ -1,6 +1,7 @@
 package org.pricelessfestival.crossoff.server.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -18,13 +19,14 @@ import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
 import static org.junit.Assert.*;
-import static org.pricelessfestival.crossoff.server.service.GlobalObjectMapper.JACKSON;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  * Created by ivan on 4/26/18.
  */
 @Log4j2
 public class ApiTests extends CrossoffIntegrationTests {
+    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());;
 
     @Test
     public void validScans() throws IOException {
@@ -91,6 +93,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         try {
             Thread.sleep(999L);
         } catch (InterruptedException e) {
+            // ignore
         }
         scan1 = scan("1");
         assertFalse(scan1.isAccepted());
@@ -109,7 +112,7 @@ public class ApiTests extends CrossoffIntegrationTests {
         // verify no tickets to start
         assertEquals(0, getTickets().size());
         // create ticket
-        assertEquals(HTTP_OK, addTickets("TESTCLEANUP"));
+        assertEquals(HTTP_OK, addTickets("CLEANUP"));
         // ticket was created
         assertEquals(1, getTickets().size());
     }
@@ -167,7 +170,7 @@ public class ApiTests extends CrossoffIntegrationTests {
 
     @Test
     public void validExample() throws IOException {
-        Map<String, Ticket> exampleTickets = getTicketMap("example", null);
+        Map<String, Ticket> exampleTickets = getTicketMap("example");
         String[] ticketCodes = new String[exampleTickets.size()];
         assertEquals(HTTP_OK, addTickets(exampleTickets.keySet().toArray(ticketCodes)));
         Map<String, Ticket> tickets = getTickets();
@@ -192,50 +195,50 @@ public class ApiTests extends CrossoffIntegrationTests {
     @Test
     public void getTicketByCode() throws IOException {
         addTickets("A1");
-        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        Ticket ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertEquals("A1", ticket.getCode());
     }
 
     @Test
     public void updateTicketDescription() throws IOException {
         addTickets("A1");
-        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        Ticket ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertTrue(ticket.getDescription().startsWith("GENERIC"));
         Ticket updateTicket = new Ticket();
         updateTicket.setDescription("new description");
         assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
-        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertTrue(ticket.getDescription().startsWith("new descr"));
     }
 
     @Test
     public void updateTicketholder() throws IOException {
         addTickets("A1");
-        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        Ticket ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertTrue(ticket.getTicketholder().startsWith("Ticket"));
         Ticket updateTicket = new Ticket();
         updateTicket.setTicketholder("Alice Cooper");
         assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
-        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertTrue(ticket.getTicketholder().startsWith("Alice"));
 
         // unset
         updateTicket.setTicketholder("");
         assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
-        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
         assertNull(ticket.getTicketholder());
     }
 
     @Test
     public void updateTicketType() throws IOException {
         addTickets("A1");
-        Ticket ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
-        assertTrue(ticket.getTicketType().equals(Ticket.TicketType.UNSPECIFIED));
+        Ticket ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertEquals(ticket.getTicketType(), Ticket.TicketType.UNSPECIFIED);
         Ticket updateTicket = new Ticket();
         updateTicket.setTicketType(Ticket.TicketType.PRINT_AT_HOME);
         assertEquals(HTTP_OK, updateTicket("A1", updateTicket));
-        ticket = JACKSON.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
-        assertTrue(ticket.getTicketType().equals(Ticket.TicketType.PRINT_AT_HOME));
+        ticket = objectMapper.readValue(Request.Get(rootUrl + "tickets/A1").execute().returnContent().asString(), Ticket.class);
+        assertEquals(ticket.getTicketType(), Ticket.TicketType.PRINT_AT_HOME);
     }
 
     @Test
@@ -394,8 +397,8 @@ public class ApiTests extends CrossoffIntegrationTests {
     private void ascendingCode(List<Ticket> tickets, boolean isAscending) {
         boolean ascending = true;
         String lastCode = "";
-        for (int i = 0; i < tickets.size(); i++) {
-            String thisCode = tickets.get(i).getCode();
+        for (Ticket ticket : tickets) {
+            String thisCode = ticket.getCode();
             if (thisCode.compareTo(lastCode) < 0) {
                 ascending = false;
             }
@@ -405,11 +408,11 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     private Map<String, Ticket> getTickets() throws IOException {
-        return getTicketMap(null, null);
+        return getTicketMap(null);
     }
 
-    private Map<String, Ticket> getTicketMap(String listSpec, String orderBy) throws IOException {
-        List<Ticket> ticketList = getTicketList(listSpec, orderBy);
+    private Map<String, Ticket> getTicketMap(String listSpec) throws IOException {
+        List<Ticket> ticketList = getTicketList(listSpec, null);
         return ticketList.stream().collect(Collectors.toMap(Ticket::getCode, identity()));
     }
 
@@ -422,7 +425,7 @@ public class ApiTests extends CrossoffIntegrationTests {
             url += "?sort=" + orderBy;
         }
         String ticketList = Request.Get(url).execute().returnContent().asString();
-        return JACKSON.readValue(ticketList, new TypeReference<List<Ticket>>() { } );
+        return objectMapper.readValue(ticketList, new TypeReference<List<Ticket>>() { } );
     }
 
     private int addTickets(String... codes) throws IOException {
@@ -433,19 +436,20 @@ public class ApiTests extends CrossoffIntegrationTests {
     }
 
     private int addTickets(List<Ticket> tickets) throws IOException {
-        String postTickets = JACKSON.writeValueAsString(tickets);
+        String postTickets = objectMapper.writeValueAsString(tickets);
         return Request.Post(rootUrl + "tickets/").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
                 .returnResponse().getStatusLine().getStatusCode();
     }
 
     private int addTicket(Ticket ticket) throws IOException {
-        String postTickets = JACKSON.writeValueAsString(ImmutableList.of(ticket));
+        String postTickets = objectMapper.writeValueAsString(ImmutableList.of(ticket));
         return Request.Post(rootUrl + "tickets/").bodyString(postTickets, ContentType.APPLICATION_JSON).execute()
                 .returnResponse().getStatusLine().getStatusCode();
     }
 
     private ScanResult scan(String code, boolean manualScan) throws IOException {
-        return JACKSON.readValue(Request.Post(rootUrl + "tickets/" + code + (manualScan ? "?manual=true" : "")).execute().returnContent().asString(), ScanResult.class);
+        String scanResult = Request.Post(rootUrl + "tickets/" + code + (manualScan ? "?manual=true" : "")).execute().returnContent().asString();
+        return objectMapper.readValue(scanResult, ScanResult.class);
     }
 
     private ScanResult scan(String code) throws IOException {
@@ -454,7 +458,7 @@ public class ApiTests extends CrossoffIntegrationTests {
 
     private int updateTicket(String code, Ticket updateTicket) throws IOException {
         return Request.Put(rootUrl + "tickets/" + code)
-                .bodyString(JACKSON.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
+                .bodyString(objectMapper.writeValueAsString(updateTicket), ContentType.APPLICATION_JSON)
                 .execute().returnResponse().getStatusLine().getStatusCode();
     }
 }

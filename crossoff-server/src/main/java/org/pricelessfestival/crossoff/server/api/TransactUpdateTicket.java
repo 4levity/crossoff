@@ -32,14 +32,13 @@ public class TransactUpdateTicket extends CrossoffTransaction<Ticket> {
             ticket.setDescription(updateTicket.getDescription()); // update description
             modified = true;
         }
+        // remove, set or change ticketholder
         if (updateTicket.getTicketholder() != null && updateTicket.getTicketholder().isEmpty()
                 && ticket.getTicketholder() != null) {
-            // unset ticketholder
             ticket.setTicketholder(null); // empty string = unset (set to null)
             modified = true;
         } else if (updateTicket.getTicketholder() != null
                 && (ticket.getTicketholder() == null || !updateTicket.getTicketholder().equals(ticket.getTicketholder()))) {
-            // set or change ticketholder
             validTicketholder(updateTicket);
             ticket.setTicketholder(updateTicket.getTicketholder());
             modified = true;
@@ -50,21 +49,20 @@ public class TransactUpdateTicket extends CrossoffTransaction<Ticket> {
             ticket.setTicketType(updateTicket.getTicketType());
             modified = true;
         }
-        // void or unvoid
+        // void or un-void
         if (updateTicket.getVoided() != null && (
                 (updateTicket.getVoided() && (ticket.getVoided() == null || !ticket.getVoided()))
                         || (!updateTicket.getVoided() && ticket.getVoided() != null && ticket.getVoided()))) {
             ticket.setVoided(updateTicket.getVoided() ? true : null);
             modified = true;
         }
+        // remove, set or change nodes
         if (updateTicket.getNotes() != null && updateTicket.getNotes().isEmpty()
                 && ticket.getNotes() != null) {
-            // unset notes
             ticket.setNotes(null); // empty string = unset (set to null)
             modified = true;
         } else if (updateTicket.getNotes() != null
                 && (ticket.getNotes() == null || !updateTicket.getNotes().equals(ticket.getNotes()))) {
-            // set or change notes
             validNotes(updateTicket);
             ticket.setNotes(updateTicket.getNotes());
             modified = true;
@@ -72,7 +70,7 @@ public class TransactUpdateTicket extends CrossoffTransaction<Ticket> {
         // save changes
         if (modified) {
             log.info("* UPDATED TICKET DETAILS: {} {} / {}", ticket.getCode(), ticket.getTicketholder(), ticket.getDescription());
-            session.saveOrUpdate(ticket);
+            session.merge(ticket);
         }
         return ticket;
     }

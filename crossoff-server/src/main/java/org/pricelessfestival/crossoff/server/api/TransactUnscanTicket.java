@@ -17,7 +17,7 @@ public class TransactUnscanTicket extends CrossoffTransaction<Ticket> {
         Ticket ticket = ticket(session, code);
         ticket.setScanned(null);
         log.info("* UN-SCANNED TICKET: {} {}", ticket.getCode(), ticket.getDescription());
-        session.saveOrUpdate(ticket);
+        session.merge(ticket);
         return ticket;
     }
 }

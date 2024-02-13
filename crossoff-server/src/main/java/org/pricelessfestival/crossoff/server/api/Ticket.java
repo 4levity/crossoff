@@ -90,7 +90,7 @@ public class Ticket {
     }
 
     // acceptable barcodes: 1-64 chars long, subset of Code 39 printable characters (no / + or [space])
-    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]{1,64}$");
+    private static final Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-$%*]{1,64}$");
 
     public static boolean validTicketCode(String code) {
         return code != null && VALID_TICKET_CODE.matcher(code).matches();

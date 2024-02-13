@@ -18,7 +18,7 @@ public class TransactCreateTickets extends CrossoffTransaction<List<Ticket>> {
 
     @Override
     public List<Ticket> apply(Session session) {
-        if (tickets == null || tickets.size() == 0) {
+        if (tickets == null || tickets.isEmpty()) {
             log.warn("client tried to add empty ticket list");
             throw new BadRequestException("must provide list of tickets");
         }
@@ -61,7 +61,7 @@ public class TransactCreateTickets extends CrossoffTransaction<List<Ticket>> {
                     ticket.getTicketholder(),
                     ticket.getTicketType(),
                     ticket.getNotes());
-            session.saveOrUpdate(newTicket);
+            session.merge(newTicket);
         });
         log.info("ADDED {} tickets", tickets.size());
         return tickets;

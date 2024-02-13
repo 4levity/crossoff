@@ -22,7 +22,7 @@ public class TransactDeleteTicket extends CrossoffTransaction<Response> {
             log.warn("tried to delete ticket {} that was already scanned", ticket.getCode());
             throw new BadRequestException("cannot delete a ticket that has a scan timestamp");
         }
-        session.delete(ticket);
+        session.remove(ticket);
         return Response.noContent().build();
     }
 }
