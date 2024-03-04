@@ -7,29 +7,25 @@ import java.util.regex.Pattern;
 
 public class Scanner {
 
-    // if running as Android Virtual Device, 10.0.2.2 is the magic address of host system localhost
-    public static final String CROSSOFF_SERVER_HOST_ADDR = "10.0.2.2";
-    public static final int CROSSOFF_SERVER_PORT = 8080;
-
     // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
-    private static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
+    private final static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
 
     public static boolean validTicketCode(String code) {
         return code != null && VALID_TICKET_CODE.matcher(code).matches();
     }
 
-    public static void scanTicket(String ticketCode, ResultHandler consumer) {
+    public static void scanTicket(String baseUrl, String ticketCode, ResultHandler consumer) {
         if (!validTicketCode(ticketCode)) {
             consumer.accept("Weird barcode scanned. "
                     + "Make sure camera is pointed at ticket!\n(scan = " + ticketCode + ")");
         } else {
-            serverScan(ticketCode, consumer);
+            serverScan(baseUrl, ticketCode, consumer);
         }
     }
 
-    private static void serverScan(String ticketCode, final ResultHandler consumer) {
+    private static void serverScan(String baseUrl, String ticketCode, final ResultHandler consumer) {
         HttpClient httpClient = new HttpClient();
-        String url = "http://" + CROSSOFF_SERVER_HOST_ADDR + ":" + CROSSOFF_SERVER_PORT + "/tickets/" + ticketCode;
+        String url = baseUrl + "/tickets/" + ticketCode;
         httpClient.post(url, "", new HttpClient.Handler() {
             @Override
             public void accept(int statusCode, String body) {

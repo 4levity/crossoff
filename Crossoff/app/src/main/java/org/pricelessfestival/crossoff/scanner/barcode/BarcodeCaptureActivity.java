@@ -29,12 +29,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.hardware.Camera;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
@@ -240,9 +239,9 @@ public final class BarcodeCaptureActivity extends AppCompatActivity
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Crossoff")
+        builder.setTitle(getString(R.string.app_name))
                 .setMessage(R.string.no_camera_permission)
-                .setPositiveButton(R.string.ok, listener)
+                .setPositiveButton(android.R.string.ok, listener)
                 .show();
     }
 

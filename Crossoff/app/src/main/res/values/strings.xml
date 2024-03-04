@@ -2,13 +2,25 @@
     <string name="app_name">Crossoff</string>
 
     <!-- Strings related to MainActivity-->
-    <string name="scan_barcode_button">Scan barcode</string>
+    <string name="scan_barcode_button">Scan Barcode</string>
     <string name="no_barcode_captured">No barcode captured</string>
     <string name="barcode_error_format">"Error reading barcode: %1$s"</string>
+    <string name="background_description">Baroot</string>
+    <string name="connecting">"Please wait, contacting server…"</string>
+    <string name="configure">Configure</string>
+    <string name="clear">CLEAR</string>
 
     <!-- Strings related to barcode scanner -->
-    <string name="ok">OK</string>
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
     <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
+
+    <!-- Dialog Settings -->
+    <string name="dialog_settings_server">Server Configuration</string>
+    <string name="dialog_settings_server_address">Server Address</string>
+    <string name="dialog_settings_server_port">Server Port</string>
+    <string name="dialog_settings_server_address_error">Must be a properly formatted IP address</string>
+    <string name="dialog_settings_server_port_error">Must be at least one digit</string>
+    <string name="dialog_settings_updated">Settings Updated</string>
+    <string name="dialog_settings_restore_default_button">Set Defaults</string>
 </resources>
