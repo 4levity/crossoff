@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 import java.util.regex.Pattern;
 
-public class Scanner {
+public class TicketAuthentication {
 
     // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
     private final static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
