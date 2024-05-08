@@ -84,6 +84,38 @@
             tools:text="8080"/>
     </com.google.android.material.textfield.TextInputLayout>
 
+    <TextView
+        android:id="@+id/switchDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_marginTop="32dp"
+        android:text="@string/dialog_settings_enable_all_barcode_types"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextServerPort_layout" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchEnableAllBarcodeTypes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintBottom_toBottomOf="@+id/switchDescription"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/switchDescription"
+        app:layout_constraintTop_toTopOf="@+id/switchDescription" />
+
+    <TextView
+        android:id="@+id/restartWarning"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="@color/pricelessRed"
+        android:layout_marginTop="4dp"
+        android:visibility="gone"
+        android:text="@string/dialog_settings_needs_restart"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switchDescription" />
+
     <Button
         android:id="@+id/button_save"
         android:layout_width="wrap_content"
@@ -92,7 +124,7 @@
         android:allowClickWhenDisabled="false"
         android:text="@android:string/ok"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextServerPort_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/switchDescription" />
 
     <Button
         android:id="@+id/button_cancel"
@@ -102,7 +134,7 @@
         app:layout_constraintHorizontal_bias="1"
         android:text="@android:string/cancel"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextServerPort_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/switchDescription" />
 
     <Button
         android:id="@+id/button_defaults"
@@ -111,9 +143,9 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="16dp"
-        android:text="@string/dialog_settings_restore_default_button"
+        android:text="@string/dialog_settings_reset_changes_button"
         app:layout_constraintEnd_toStartOf="@+id/button_cancel"
         app:layout_constraintStart_toEndOf="@+id/button_save"
-        app:layout_constraintTop_toBottomOf="@+id/editTextServerPort_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/switchDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,15 +9,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.pricelessfestival.crossoff.R;
+import org.pricelessfestival.crossoff.scanner.BarcodeScanner;
 
 import java.util.Locale;
 
@@ -26,6 +30,10 @@ public class ConfigDialog extends BottomSheetDialogFragment {
     private final String IP_ADDRESS_REGEX = "^\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3})?)?)?)?)?)?";
     private final String IP_ADDRESS_REGEX_2 = "^\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3}))))))";
 
+    private Boolean addressGood = true;
+    private Boolean portGood = true;
+    private Button saveButton;
+    private View.OnClickListener saveListener;
 
     @Nullable
     @Override
@@ -38,12 +46,24 @@ public class ConfigDialog extends BottomSheetDialogFragment {
         TextInputLayout editServerAddressLayout = view.findViewById(R.id.editTextServerAddress_layout);
         TextInputEditText editServerPort = view.findViewById(R.id.editTextServerPort);
         TextInputLayout editServerPortLayout = view.findViewById(R.id.editTextServerPort_layout);
+        SwitchMaterial switchEnableAllBarcodeTypes = view.findViewById(R.id.switchEnableAllBarcodeTypes);
+        TextView toggleWarningText = view.findViewById(R.id.restartWarning);
 
-        Button saveButton = view.findViewById(R.id.button_save);
-        View.OnClickListener saveListener = v -> {
-            saveConfig(saveButton.getContext(), editServerAddress.getText().toString(), editServerPort.getText().toString());
+        saveButton = view.findViewById(R.id.button_save);
+        saveListener = v -> {
+            @BarcodeScanner.BarcodeType int barcodeType = Barcode.CODE_128;
+            if(switchEnableAllBarcodeTypes.isChecked())
+                barcodeType = Barcode.ALL_FORMATS;
+
+            saveConfig(saveButton.getContext(),
+                    editServerAddress.getText().toString(),
+                    editServerPort.getText().toString(),
+                    barcodeType);
             dismiss();
         };
+        // display stored value for the enable switch
+        int storedBarcodeType = SharedPrefs.instance(view.getContext()).getBarcodeType();
+        switchEnableAllBarcodeTypes.setChecked(storedBarcodeType == Barcode.ALL_FORMATS);
 
         Button cancelButton = view.findViewById(R.id.button_cancel);
         cancelButton.setOnClickListener(v -> dismiss());
@@ -58,7 +78,9 @@ public class ConfigDialog extends BottomSheetDialogFragment {
         Button defualtsButton = view.findViewById(R.id.button_defaults);
         defualtsButton.setOnClickListener(v -> {
             editServerAddress.setText(serverAddress);
-            editServerPort.setText(String.format(Locale.US, "%d", serverPort));});
+            editServerPort.setText(String.format(Locale.US, "%d", serverPort));
+            switchEnableAllBarcodeTypes.setChecked(storedBarcodeType == Barcode.ALL_FORMATS);
+        });
 
         // filter entered text for proper IP address format
         InputFilter[] filters = new InputFilter[1];
@@ -98,17 +120,13 @@ public class ConfigDialog extends BottomSheetDialogFragment {
                 if (s.toString().matches(IP_ADDRESS_REGEX_2)) {
                     editServerAddressLayout.setError(null);
                     editServerAddressLayout.setErrorEnabled(false);
-
-                    saveButton.setEnabled(true);
-                    saveButton.setOnClickListener(saveListener);
-                    saveButton.setClickable(true);
+                    addressGood = true;
+                    updateConfigDialog();
                 } else {
                     editServerAddressLayout.setError(getString(R.string.dialog_settings_server_address_error));
                     editServerAddressLayout.setErrorEnabled(true);
-
-                    saveButton.setEnabled(false);
-                    saveButton.setOnClickListener(null);
-                    saveButton.setClickable(false);
+                    addressGood = false;
+                    updateConfigDialog();
                 }
             }
         });
@@ -129,29 +147,57 @@ public class ConfigDialog extends BottomSheetDialogFragment {
                 if (!s.toString().isEmpty()) {
                     editServerPortLayout.setError(null);
                     editServerPortLayout.setErrorEnabled(false);
-
-                    saveButton.setEnabled(true);
-                    saveButton.setOnClickListener(saveListener);
-                    saveButton.setClickable(true);
+                    portGood = true;
+                    updateConfigDialog();
                 } else {
                     editServerPortLayout.setError(getString(R.string.dialog_settings_server_port_error));
                     editServerPortLayout.setErrorEnabled(true);
-
-                    saveButton.setEnabled(false);
-                    saveButton.setOnClickListener(null);
-                    saveButton.setClickable(false);
+                    portGood = false;
+                    updateConfigDialog();
                 }
             }
         });
 
+        switchEnableAllBarcodeTypes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // toggle the visibility of the warning for the switch
+                if (toggleWarningText.getVisibility() == View.GONE)
+                    toggleWarningText.setVisibility(View.VISIBLE);
+                else
+                    toggleWarningText.setVisibility(View.GONE);
+            }
+        });
+
+        updateConfigDialog();
         return view;
     }
 
-    private void saveConfig(Context context, String address, String port) {
+    private void updateConfigDialog() {
+        if(addressGood && portGood)
+            enableSaveButton();
+        else
+            disableSaveButton();
+    }
+    private void enableSaveButton() {
+        saveButton.setEnabled(true);
+        saveButton.setOnClickListener(saveListener);
+        saveButton.setClickable(true);
+    }
+
+    private void disableSaveButton() {
+        saveButton.setEnabled(false);
+        saveButton.setOnClickListener(null);
+        saveButton.setClickable(false);
+    }
+
+    private void saveConfig(Context context, String address, String port,
+                            @BarcodeScanner.BarcodeType int barcodeType) {
         // cheating by not saving these in the background thread
         SharedPrefs.instance(context).setServerAddress(address);
         SharedPrefs.instance(context).setServerPort(Integer.parseInt(port));
         Toast.makeText(context, R.string.dialog_settings_updated, Toast.LENGTH_SHORT).show();
+        SharedPrefs.instance(context).setBarcodeType(barcodeType);
     }
 
     public static String TAG = "ConfigDialog";

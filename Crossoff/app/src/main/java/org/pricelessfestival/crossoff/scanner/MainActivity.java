@@ -21,9 +21,7 @@ import org.pricelessfestival.crossoff.scanner.barcode.BarcodeCaptureActivity;
 import org.pricelessfestival.crossoff.scanner.config.ConfigDialog;
 import org.pricelessfestival.crossoff.scanner.config.SharedPrefs;
 
-import java.util.Locale;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements BarcodeScanner.BarcodeCallback {
 
     private static final int BARCODE_READER_REQUEST_CODE = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -40,18 +38,25 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // fast and efficient barcode scanner from google play services
+        @BarcodeScanner.BarcodeType int storedBarcodeType = SharedPrefs.instance(this).getBarcodeType();
+        BarcodeScanner barcodeScanner = new BarcodeScanner(this, storedBarcodeType, this);
+
         mResultTextView = findViewById(R.id.result_textview);
+
+        // barcode scan button
         mBarcodeButton = findViewById(R.id.scan_barcode_button);
         mBarcodeButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getApplicationContext(), BarcodeCaptureActivity.class);
-            startActivityForResult(intent, BARCODE_READER_REQUEST_CODE);
+            barcodeScanner.start();
         });
 
+        // manual search button
         findViewById(R.id.search_button).setOnClickListener(v -> {
             Uri searchUiUri = Uri.parse(SharedPrefs.instance(this).getBaseUrl());
             startActivity(new Intent(Intent.ACTION_VIEW, searchUiUri));
         });
 
+        // results clear button
         clearButton = findViewById(R.id.clear_button);
         clearButton.setOnClickListener(v -> {
             mResultTextView.setText("");
@@ -60,28 +65,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onBarcodeDetected(String barcode) {
+        if (barcode != null) {
+            processBarcode(barcode);
+        } else {
+            mResultTextView.setText(R.string.no_barcode_captured);
+            clearButton.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void onBarcodeError(Exception e) {
+        String errorMessage = String.format(getString(R.string.barcode_error_format),
+                e.getMessage());
+        mResultTextView.setText(errorMessage);
+        clearButton.setVisibility(View.VISIBLE);
+
+        // Kinda hacky, but run the old method of scanning barcodes
+        Intent intent = new Intent(getApplicationContext(), BarcodeCaptureActivity.class);
+            startActivityForResult(intent, BARCODE_READER_REQUEST_CODE);
+    }
+
+    /*
+        Old return method for the barcode scanner.
+        We're keeping this around for the very old devices which can't get their PlayStore updated.
+    */
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == BARCODE_READER_REQUEST_CODE) {
             if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (data != null) {
-                    mBarcodeButton.setEnabled(false);
-                    mResultTextView.setText(getString(R.string.connecting));
-
-                    String baseUrl = SharedPrefs.instance(this).getBaseUrl();
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
-                    Scanner.scanTicket(baseUrl, barcode.displayValue, new Scanner.ResultHandler() {
-                        @Override
-                        public void accept(final String result) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mResultTextView.setText(result);
-                                    mBarcodeButton.setEnabled(true);
-                                    clearButton.setVisibility(View.VISIBLE);
-                                }
-                            });
-                        }
-                    });
+                    String barcodeValue = barcode.displayValue;
+                    processBarcode(barcodeValue);
                 } else {
                     mResultTextView.setText(R.string.no_barcode_captured);
                     clearButton.setVisibility(View.VISIBLE);
@@ -97,6 +113,27 @@ public class MainActivity extends AppCompatActivity {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
+    private void processBarcode(String barcodeValue) {
+        String baseUrl = SharedPrefs.instance(this).getBaseUrl();
+
+        mBarcodeButton.setEnabled(false);
+        mResultTextView.setText(getString(R.string.connecting));
+        Scanner.scanTicket(baseUrl, barcodeValue, new Scanner.ResultHandler() {
+            @Override
+            public void accept(final String result) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mResultTextView.setText(result);
+                        mBarcodeButton.setEnabled(true);
+                        clearButton.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+        });
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

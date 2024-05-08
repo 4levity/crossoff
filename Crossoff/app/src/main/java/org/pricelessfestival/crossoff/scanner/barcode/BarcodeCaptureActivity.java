@@ -18,7 +18,12 @@
  */
 package org.pricelessfestival.crossoff.scanner.barcode;
 
-// Incorporates code from https://github.com/varvet/BarcodeReaderSample (c) 2017 Varvet, MIT license
+/**
+ * This Barcode Capture Activity is generally no longer used, except for on older devices.
+ * It is generally replaced by play-services-code-scanner
+ *
+ * Incorporates code from https://github.com/varvet/BarcodeReaderSample (c) 2017 Varvet, MIT license
+ */
 
 import android.Manifest;
 import android.annotation.SuppressLint;

@@ -3,6 +3,8 @@ package org.pricelessfestival.crossoff.scanner.config;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import org.pricelessfestival.crossoff.scanner.BarcodeScanner;
+
 import java.util.Locale;
 
 /**
@@ -14,6 +16,7 @@ public class SharedPrefs {
     private static final String CROSSOFF_PREFERENCES = "CROSSOFF_PREFERENCES";
     private static final String KEY_SERVER_ADDRESS = "KEY_SERVER_ADDRESS";
     private static final String KEY_SERVER_PORT = "KEY_SERVER_PORT";
+    private static final String KEY_BARCODE_TYPE = "KEY_BARCODE_TYPE";
 
 
     private static SharedPrefs sInstance;
@@ -56,5 +59,14 @@ public class SharedPrefs {
 
     public String getBaseUrl() {
         return String.format(Locale.US, "http://%s:%d", getServerAddress(), getServerPort());
+    }
+
+    //Default Barcode Type
+    @BarcodeScanner.BarcodeType
+    public int getBarcodeType() {
+        return mPrefs.getInt(KEY_BARCODE_TYPE, AppSettings.CROSSOFF_BARCODE_TYPE);
+    }
+    public void setBarcodeType(@BarcodeScanner.BarcodeType int barcodeType) {
+        mPrefs.edit().putInt(KEY_BARCODE_TYPE, barcodeType).apply();
     }
 }
