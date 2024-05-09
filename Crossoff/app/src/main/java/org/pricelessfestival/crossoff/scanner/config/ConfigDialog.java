@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -25,6 +24,9 @@ import org.pricelessfestival.crossoff.scanner.BarcodeScanner;
 
 import java.util.Locale;
 
+/**
+ * Class for displaying and handling updated settings for the application
+ */
 public class ConfigDialog extends BottomSheetDialogFragment {
 
     private final String IP_ADDRESS_REGEX = "^\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3})?)?)?)?)?)?";
@@ -34,6 +36,18 @@ public class ConfigDialog extends BottomSheetDialogFragment {
     private Boolean portGood = true;
     private Button saveButton;
     private View.OnClickListener saveListener;
+    final private SettingsListener settingsSaveListener;
+    final private String serverAddress;
+    final private int serverPort;
+    @BarcodeScanner.BarcodeType int barcodeType;
+
+    public ConfigDialog(String serverAddress, int serverPort,
+                        @BarcodeScanner.BarcodeType int barcodeType, SettingsListener listener){
+        settingsSaveListener = listener;
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+        this.barcodeType = barcodeType;
+    }
 
     @Nullable
     @Override
@@ -55,22 +69,21 @@ public class ConfigDialog extends BottomSheetDialogFragment {
             if(switchEnableAllBarcodeTypes.isChecked())
                 barcodeType = Barcode.ALL_FORMATS;
 
-            saveConfig(saveButton.getContext(),
+            // send new settings to the listener on save
+            settingsSaveListener.onSettingsSaved(saveButton.getContext(),
                     editServerAddress.getText().toString(),
                     editServerPort.getText().toString(),
                     barcodeType);
             dismiss();
         };
+
         // display stored value for the enable switch
-        int storedBarcodeType = SharedPrefs.instance(view.getContext()).getBarcodeType();
-        switchEnableAllBarcodeTypes.setChecked(storedBarcodeType == Barcode.ALL_FORMATS);
+        switchEnableAllBarcodeTypes.setChecked(barcodeType == Barcode.ALL_FORMATS);
 
         Button cancelButton = view.findViewById(R.id.button_cancel);
         cancelButton.setOnClickListener(v -> dismiss());
 
-        // retrieve server address
-        String serverAddress = SharedPrefs.instance(view.getContext()).getServerAddress();
-        int serverPort = SharedPrefs.instance(view.getContext()).getServerPort();
+        // set server address
         editServerAddress.setText(serverAddress);
         editServerPort.setText(String.format(Locale.US, "%d", serverPort));
 
@@ -79,7 +92,7 @@ public class ConfigDialog extends BottomSheetDialogFragment {
         defualtsButton.setOnClickListener(v -> {
             editServerAddress.setText(serverAddress);
             editServerPort.setText(String.format(Locale.US, "%d", serverPort));
-            switchEnableAllBarcodeTypes.setChecked(storedBarcodeType == Barcode.ALL_FORMATS);
+            switchEnableAllBarcodeTypes.setChecked(barcodeType == Barcode.ALL_FORMATS);
         });
 
         // filter entered text for proper IP address format
@@ -191,13 +204,9 @@ public class ConfigDialog extends BottomSheetDialogFragment {
         saveButton.setClickable(false);
     }
 
-    private void saveConfig(Context context, String address, String port,
-                            @BarcodeScanner.BarcodeType int barcodeType) {
-        // cheating by not saving these in the background thread
-        SharedPrefs.instance(context).setServerAddress(address);
-        SharedPrefs.instance(context).setServerPort(Integer.parseInt(port));
-        Toast.makeText(context, R.string.dialog_settings_updated, Toast.LENGTH_SHORT).show();
-        SharedPrefs.instance(context).setBarcodeType(barcodeType);
+    public interface SettingsListener {
+        void onSettingsSaved(Context context, String address, String port,
+                             @BarcodeScanner.BarcodeType int barcodeType);
     }
 
     public static String TAG = "ConfigDialog";

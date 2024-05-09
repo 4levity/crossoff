@@ -5,52 +5,59 @@ import org.json.JSONObject;
 
 import java.util.regex.Pattern;
 
-public class TicketAuthentication {
+public class TicketAuthenticator implements HttpClient.ReplyHandler {
 
-    // acceptable barcodes: subset of Code 39 printable characters (no / + or [space])
+    ResultHandler consumer;
+    // acceptable barcodes: subset of Code 128 printable characters (no / + or [space])
     private final static Pattern VALID_TICKET_CODE = Pattern.compile("^[A-Z0-9\\-\\$\\%\\*]+$");
 
-    public static boolean validTicketCode(String code) {
+    public TicketAuthenticator(ResultHandler consumer){
+        this.consumer = consumer;
+    }
+
+    public static boolean validCodeFormat(String code) {
         return code != null && VALID_TICKET_CODE.matcher(code).matches();
     }
 
-    public static void scanTicket(String baseUrl, String ticketCode, ResultHandler consumer) {
-        if (!validTicketCode(ticketCode)) {
-            consumer.accept("Weird barcode scanned. "
+    public void validateTicketCode(String baseUrl, String ticketCode) {
+        if (!validCodeFormat(ticketCode)) {
+            if(consumer != null)
+                consumer.postServerResult("Weird barcode scanned. "
                     + "Make sure camera is pointed at ticket!\n(scan = " + ticketCode + ")");
         } else {
-            serverScan(baseUrl, ticketCode, consumer);
+            serverValidation(baseUrl, ticketCode);
         }
     }
 
-    private static void serverScan(String baseUrl, String ticketCode, final ResultHandler consumer) {
+    public void serverValidation(String baseUrl, String ticketCode) {
         HttpClient httpClient = new HttpClient();
         String url = baseUrl + "/tickets/" + ticketCode;
-        httpClient.post(url, "", new HttpClient.Handler() {
-            @Override
-            public void accept(int statusCode, String body) {
-                boolean accepted = false;
-                try {
-                    String scanResult;
-                    if (body == null) {
-                        scanResult = "ERROR: Communication with server failed. Check network and try again. ("+statusCode+") " + url;
-                    } else if (statusCode == 200) {
-                        scanResult = parseScanResult(body);
-                    } else {
-                        scanResult = "ERROR: Unexpected response from server: HTTP " + statusCode;
-                    }
-                    accepted = true;
-                    consumer.accept(scanResult);
-                } finally {
-                    if (!accepted) {
-                        consumer.accept("Internal error!");
-                    }
-                }
-            }
-        });
+        httpClient.post(url, "", this);
     }
 
-    private static String parseScanResult(String body) {
+    @Override
+    public void serverReply(int statusCode, String body) {
+        boolean accepted = false;
+        try {
+            String serverResult;
+            if (body == null) {
+                serverResult = "ERROR: Communication with server failed. Check network and try again. ("+statusCode+")";
+            } else if (statusCode == 200) {
+                serverResult = parseServerResult(body);
+            } else {
+                serverResult = "ERROR: Unexpected response from server: HTTP " + statusCode;
+            }
+            accepted = true;
+            if(consumer != null)
+                consumer.postServerResult(serverResult);
+        } finally {
+            if (!accepted && consumer != null) {
+                consumer.postServerResult("Internal error!");
+            }
+        }
+    }
+
+    public String parseServerResult(String body) {
         String result;
         JSONObject scanResult = null;
         try {
@@ -102,7 +109,6 @@ public class TicketAuthentication {
     }
 
     public interface ResultHandler {
-
-        void accept(final String scanResult);
+        void postServerResult(final String serverResult);
     }
 }
