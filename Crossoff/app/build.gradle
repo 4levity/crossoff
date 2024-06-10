@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 34
     defaultConfig {
         applicationId "org.pricelessfestival.crossoff.scanner"
-        minSdkVersion 19
-        targetSdkVersion 30
+        minSdkVersion 21
+        targetSdkVersion 33
         versionCode 1
         versionName "1.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -17,18 +17,32 @@ android {
         }
     }
     namespace 'org.pricelessfestival.crossoff'
+/*    buildFeatures {
+        viewBinding true
+    }*/
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support:support-media-compat:27.1.1'
-    implementation 'com.android.support:support-v4:27.1.1'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
-    implementation 'com.google.android.gms:play-services-vision:15.0.0'
+//    implementation 'com.android.support:support-media-compat:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.core:core:1.12.0'
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
 
-    testImplementation 'junit:junit:4.12'
+    // used for old barcode scanner
+    // vision services 19.0.0 seems to be the latest version that functions on Android API 23
+    implementation 'com.google.android.gms:play-services-vision:19.0.0'
+
+    // used for new barcode scanner
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
+
+    testImplementation 'junit:junit:4.13.2'
 
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

@@ -2,7 +2,8 @@
 
 Crossoff app works with crossoff-server to scan barcodes using an Android device camera.
 
-On a successful barcode scan, it will attempt to contact crossoff-server at this hardcoded address:
+On a successful barcode scan, by default it will attempt to contact crossoff-server at this 
+configured address:
 
     http://10.0.2.2:8080
 
@@ -27,11 +28,7 @@ select Settings > Security and set "Enable ADB" On.) Now, when you plug the devi
 with a USB cable, and click "allow" on the device, you should see the device appear in your "Select 
 Deployment Target" box. Now you can load Crossoff directly onto the device over USB.
 
-**Hard coded IP address for physical device:** As noted above, Crossoff relies on a hardcoded IP 
-address since it is intended to run on a separate network with a specific configuration (see ../README.md). 
-But probably the IP address of your test server is not 10.0.2.2 so Crossoff running on a physical 
-device won't be able to contact it by default. The easiest way to reconfigure Crossoff app with a 
-different server IP address for your test environment is to simply edit the file 
-**src/main/java/org/pricelessfestival/crossoff/Scanner.java** 
-to change the IP address at the top of the file, then Build / Make Project, and load the modified
-app onto your device. (Janky? Perhaps, but if you don't like it, send me a pull request.)
+**IP address for physical device:** As noted above, Crossoff is by default set to communicate with
+the server at a specific IP address, as it is intended to run on a network with a specific 
+configuration (see ../README.md). When running against servers not set to the default IP address, 
+use the Crossoff in-app configuration panel to set the new IP address for the server.

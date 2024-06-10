@@ -72,7 +72,7 @@ public class CrossoffWebServer {
             try {
                 chain.doFilter(request, response);
             } finally {
-                if (request instanceof HttpServletRequest req && response instanceof HttpServletResponse res) {
+                /*if (request instanceof HttpServletRequest req && response instanceof HttpServletResponse res) {
                     log.info("{} {} {} : HTTP {}",
                             req.getRemoteAddr(),
                             req.getMethod(),
@@ -80,7 +80,7 @@ public class CrossoffWebServer {
                                     + req.getPathInfo()
                                     + (req.getQueryString() == null ? "" : "?" + req.getQueryString()),
                             res.getStatus());
-                }
+                }*/
             }
         }
 

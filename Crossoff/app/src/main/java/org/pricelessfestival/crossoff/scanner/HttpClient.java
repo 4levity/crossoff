@@ -15,22 +15,22 @@ public class HttpClient {
 
     private static final String TAG = "HttpClient";
 
-    public interface Handler {
-        void accept(int statusCode, String body);
+    public interface ReplyHandler {
+        void serverReply(int statusCode, String body);
     }
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-    public void post(final String url, final String json, final Handler handler) {
+    public void post(final String url, final String json, final ReplyHandler replyHandler) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                doPost(url, json, handler);
+                doPost(url, json, replyHandler);
             }
         }).start();
     }
 
-    private void doPost(final String url, final String json, final Handler handler) {
+    private void doPost(final String url, final String json, final ReplyHandler replyHandler) {
         boolean accepted = false;
         try {
             OkHttpClient client = new OkHttpClient();
@@ -55,11 +55,11 @@ public class HttpClient {
             }
             if (code != null) {
                 accepted = true;
-                handler.accept(code, content);
+                replyHandler.serverReply(code, content);
             }
         } finally {
             if (!accepted) {
-                handler.accept(0, null);
+                replyHandler.serverReply(0, null);
             }
         }
     }

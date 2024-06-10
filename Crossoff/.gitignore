@@ -4,7 +4,11 @@
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/assetWizardSettings.xml
+/.idea/studiobot.xml
 .DS_Store
 /build
 /captures
 .externalNativeBuild
+/.idea/shelf/
