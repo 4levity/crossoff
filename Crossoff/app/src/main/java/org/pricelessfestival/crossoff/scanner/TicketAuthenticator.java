@@ -5,6 +5,10 @@ import org.json.JSONObject;
 
 import java.util.regex.Pattern;
 
+/**
+ * Authenticates a ticket code with the server.
+ * Based on the code from the Scanner class from the original Crossoff project.
+ */
 public class TicketAuthenticator implements HttpClient.ReplyHandler {
 
     ResultHandler consumer;
@@ -19,6 +23,11 @@ public class TicketAuthenticator implements HttpClient.ReplyHandler {
         return code != null && VALID_TICKET_CODE.matcher(code).matches();
     }
 
+    /*
+     * Validates a ticket code against a specified format and with the server at the given URL.
+     * [baseUrl] is the URL of the server to connect to for validation.
+     * [ticketCode] is the ticket code to validate.
+     */
     public void validateTicketCode(String baseUrl, String ticketCode) {
         if (!validCodeFormat(ticketCode)) {
             if(consumer != null)
@@ -29,12 +38,13 @@ public class TicketAuthenticator implements HttpClient.ReplyHandler {
         }
     }
 
-    public void serverValidation(String baseUrl, String ticketCode) {
+    private void serverValidation(String baseUrl, String ticketCode) {
         HttpClient httpClient = new HttpClient();
         String url = baseUrl + "/tickets/" + ticketCode;
         httpClient.post(url, "", this);
     }
 
+    // HttpClient.ReplyHandler implementation
     @Override
     public void serverReply(int statusCode, String body) {
         boolean accepted = false;
@@ -108,6 +118,7 @@ public class TicketAuthenticator implements HttpClient.ReplyHandler {
         return result;
     }
 
+    //Handler for sending the server result to the consumer
     public interface ResultHandler {
         void postServerResult(final String serverResult);
     }

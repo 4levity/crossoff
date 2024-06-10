@@ -15,7 +15,9 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
- * Service Class for interfacing with the play-services-code-scanner
+ * Service Class for interfacing with the play-services-code-scanner.
+ * This service can be configured to look for the CODE_128 barcode format or the
+ * generalized set of all barcode formats.
  */
 public class BarcodeScanner {
 

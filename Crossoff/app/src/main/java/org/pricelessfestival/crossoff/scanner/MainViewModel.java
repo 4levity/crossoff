@@ -16,6 +16,7 @@ public class MainViewModel extends ViewModel implements TicketAuthenticator.Resu
         return scanResultMessage;
     }
 
+    // ticket authenticator to validate ticket codes against the server
     private TicketAuthenticator authenticator = new TicketAuthenticator(this);
 
     private String baseUrl = "";
@@ -27,6 +28,8 @@ public class MainViewModel extends ViewModel implements TicketAuthenticator.Resu
         authenticator.validateTicketCode(baseUrl, ticketCode);
     }
 
+    // handler to be called when the server returns a result
+    // display any given message to the user on the UI thread
     @Override
     public void postServerResult(String serverResult) {
         // send the server reply message to the UI

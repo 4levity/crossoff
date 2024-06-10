@@ -12,7 +12,7 @@
     <string name="scan_stopped">Scan Stopped</string>
 
     <!-- Dialog Settings -->
-    <string name="dialog_settings_server">Server Configuration</string>
+    <string name="dialog_settings_server">App Configuration</string>
     <string name="dialog_settings_server_address">Server Address</string>
     <string name="dialog_settings_server_port">Server Port</string>
     <string name="dialog_settings_server_address_error">Must be a properly formatted IP address</string>
