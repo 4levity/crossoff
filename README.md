@@ -22,7 +22,7 @@ NOTE: Brown Paper Tickets may change their data format at any time and that feat
 
 There are two subprojects:
 
-* crossoff-server (Java 8 ticket validation server and UI)
+* crossoff-server (Java ticket validation server and UI)
 * Crossoff (Android barcode scanning app)
 
 crossoff-server is a self-contained LAN web app to manage the ticket list for an event. Crossoff app works 
@@ -81,19 +81,20 @@ provided by WPA2, and by not connecting anything else to your ticket validation 
   * LAN address 10.0.2.0/24 (i.e. netmask 255.255.255.0)
   * DHCP range 10.0.2.100 - 10.0.2.200 (or whatever, but not including 10.0.2.2)
   * WPA2-PSK (WPA2 Personal) encryption for the WiFi, using a secure+secret password
-  * No Internet access (recommended)
 * One laptop or PC or Raspberry Pi or similar (also maybe a spare) configured as follows:
-  * Any operating system, Java 8 installed
-  * Connected to the router (WiFi or Ethernet) and set up with **static ip address 10.0.2.2**
+  * Any operating system, Java 17 installed
+  * Connected to the router and set up with **static ip address 10.0.2.2** (default in the Android app)
   * crossoff-server installed and running (optionally you could set it to start automatically on boot up)
   * tickets loaded into crossoff-server database
-* One or more phones/tablets
-  * Android KitKat or later
-  * Connected to the WiFi
-  * Running the Crossoff app
 
-Or ... you could use a Raspberry Pi Zero W with `hostapd` installed as both your server and
-the WiFi access point, and run the entire service from a small USB battery. 
+Minimally, a Pi Zero W or similar with `hostapd` to act as a WiFi access point could host the service.
+
+For clients, at least one phone/tablet:
+
+* Android 5 (Lollipop) or later
+* Camera to read bar codes
+* Connected to WiFi
+* Running the Crossoff app
 
 ## Risks ##
 

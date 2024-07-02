@@ -9,6 +9,11 @@ repositories {
 group 'org.pricelessfestival.crossoff'
 version '1.2'
 
+compileJava {
+    sourceCompatibility = 17
+    targetCompatibility = 17
+}
+
 application {
     mainClass = 'org.pricelessfestival.crossoff.server.Main'
 }

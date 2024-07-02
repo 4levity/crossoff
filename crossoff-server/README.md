@@ -1,7 +1,7 @@
 # crossoff-server LAN web app #
 
 crossoff-server is a self-contained LAN web app to manage a ticket database. Requires
-Java. Originally developed for Java 8. Currently developing with OpenJDK 21.
+Java 17.
 
 crossoff-server looks for its database in **./database/** and creates if it does not exist. 
 It writes logs to console and to **./log/crossoff.log** .
